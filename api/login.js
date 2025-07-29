@@ -1,7 +1,7 @@
-import axios from 'axios';
+const axios = require('axios'); // <-- ESTA LINHA FOI ALTERADA
 
 // Função Serverless da Vercel
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
     // 1. Aceitar apenas requisições POST
     if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
@@ -61,4 +61,4 @@ export default async function handler(req, res) {
 
         return res.status(502).json({ error: 'Ocorreu um erro ao se comunicar com os servidores da educação. Tente novamente mais tarde.' });
     }
-}
+};
