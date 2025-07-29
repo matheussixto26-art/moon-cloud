@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoonFuturo - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: #16213e;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #ffffff;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9em;
+            color: #a7a9be;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #0f3460;
+            border-radius: 5px;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            font-size: 1em;
+            box-sizing: border-box; /* Important */
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #e94560;
+            color: white;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #f06a81;
+        }
+
+        #message {
+            margin-top: 20px;
+            color: #e94560;
+            font-weight: 600;
+            min-height: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #result-container {
+            margin-top: 20px;
+            text-align: left;
+            background-color: #1a1a2e;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #0f3460;
+        }
+        
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #a7a9be;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>MoonFuturo</h1>
+        <form id="login-form">
+            <div class="input-group">
+                <label for="ra">Registro Acadêmico (RA):</label>
+                <input type="text" id="ra" name="ra" placeholder="Digite seu RA completo (com UF)" required>
+            </div>
+            <div class="input-group">
+                <label for="senha">Senha:</label>
+                <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required>
+            </div>
+            <button type="submit" id="login-button">Entrar</button>
+        </form>
+        <div id="message"></div>
+        <div id="result-container" class="hidden">
+            <h2>Dados das Turmas:</h2>
+            <pre id="result-data"></pre>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('login-form');
+            const messageDiv = document.getElementById('message');
+            const resultContainer = document.getElementById('result-container');
+            const resultData = document.getElementById('result-data');
+            const button = document.getElementById('login-button');
+
+            loginForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const ra = document.getElementById('ra').value;
+                const senha = document.getElementById('senha').value;
+                
+                messageDiv.style.color = '#a7a9be';
+                messageDiv.textContent = '✨ Entrando na plataforma...';
+                button.disabled = true;
+                resultContainer.classList.add('hidden');
+
+                try {
+                    // Esta chamada vai para o seu backend em /api/login
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ user: ra, senha: senha }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Ocorreu um erro desconhecido.');
+                    }
+                    
+                    messageDiv.style.color = '#4caf50';
+                    messageDiv.textContent = '✅ Login realizado com sucesso!';
+                    resultData.textContent = JSON.stringify(data, null, 2);
+                    resultContainer.classList.remove('hidden');
+
+                } catch (error) {
+                    messageDiv.style.color = '#e94560';
+                    messageDiv.textContent = `❌ Erro: ${error.message}`;
+                } finally {
+                    button.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+  </html>
+  
