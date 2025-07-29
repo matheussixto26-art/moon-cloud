@@ -1,8 +1,6 @@
-const axios = require('axios'); // <-- ESTA LINHA FOI ALTERADA
+const axios = require('axios');
 
-// Função Serverless da Vercel
 module.exports = async (req, res) => {
-    // 1. Aceitar apenas requisições POST
     if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
         return res.status(405).json({ error: 'Método não permitido. Use POST.' });
@@ -10,17 +8,14 @@ module.exports = async (req, res) => {
 
     const { user, senha } = req.body;
 
-    // 2. Validar se os dados foram recebidos
     if (!user || !senha) {
         return res.status(400).json({ error: 'RA e Senha são obrigatórios.' });
     }
 
-    // 3. Bloco TRY/CATCH para lidar com erros externos
     try {
-        // --- ETAPA 1: Autenticação para obter o Token ---
         const loginResponse = await axios.post(
             "https://sedintegracoes.educacao.sp.gov.br/credenciais/api/LoginCompletoToken",
-            { user, senha }, // Payload da requisição
+            { user, senha },
             {
                 headers: {
                     "Ocp-Apim-Subscription-Key": "2b03c1db3884488795f79c37c069381a",
@@ -29,14 +24,21 @@ module.exports = async (req, res) => {
             }
         );
 
+        // ======================= LINHA DE DEBATE =======================
+        // A linha abaixo irá "imprimir" a resposta completa da SED nos logs da Vercel
+        console.log('RESPOSTA COMPLETA DA API DA SED:', JSON.stringify(loginResponse.data, null, 2));
+        // =============================================================
+
         const token = loginResponse.data.token;
         const codigoAluno = loginResponse.data.codigoAluno;
 
         if (!token || !codigoAluno) {
-            return res.status(401).json({ error: 'Token ou Código do Aluno não retornados pela API. Verifique as credenciais.' });
+            // Agora retornamos a mensagem da API, se houver uma.
+            const apiMessage = loginResponse.data.message || 'Token ou Código do Aluno não retornados pela API.';
+            return res.status(401).json({ error: `Credenciais rejeitadas. (Detalhe: ${apiMessage})` });
         }
-
-        // --- ETAPA 2: Usar o Token para buscar dados do Aluno (Turmas) ---
+        
+        // Se o login for bem-sucedido, continuamos normalmente
         const turmasResponse = await axios.get(
             `https://sedintegracoes.educacao.sp.gov.br/apihubintegracoes/api/v2/Turma/ListarTurmasPorAluno?codigoAluno=${codigoAluno}`,
             {
@@ -48,17 +50,15 @@ module.exports = async (req, res) => {
             }
         );
 
-        // 4. Se tudo deu certo, retornar os dados das turmas
         return res.status(200).json(turmasResponse.data);
 
     } catch (error) {
-        // 5. Se qualquer chamada falhar, capturar o erro e retornar uma resposta JSON amigável
-        console.error('ERRO NA API DA SED:', error.response ? error.response.data : error.message);
+        console.error('ERRO NA CHAMADA AXIOS:', error.response ? JSON.stringify(error.response.data, null, 2) : error.message);
         
         if (error.response && error.response.status === 401) {
-            return res.status(401).json({ error: 'RA ou Senha inválidos.' });
+            return res.status(401).json({ error: 'RA ou Senha inválidos (Erro 401).' });
         }
 
-        return res.status(502).json({ error: 'Ocorreu um erro ao se comunicar com os servidores da educação. Tente novamente mais tarde.' });
+        return res.status(502).json({ error: 'Ocorreu um erro ao se comunicar com os servidores da educação.' });
     }
 };
