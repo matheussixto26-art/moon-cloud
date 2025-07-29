@@ -3,152 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoonFuturo - Login</title>
+    <title>MoonFuturo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* CSS Reset e Configurações Globais */
+        :root {
+            --bg-dark: #0d1117;
+            --bg-medium: #161b22;
+            --border-color: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-green: #238636;
+            --accent-green-hover: #2ea043;
+            --accent-red: #da3633;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            /* Cor de fundo principal (azul bem escuro) */
-            background-color: #0d1117;
-            color: #e0e0e0;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
             font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+        }
+        /* Utilitários */
+        .hidden { display: none !important; }
+
+        /* --- TELA DE LOGIN --- */
+        #login-screen {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
+            height: 100vh;
+            transition: opacity 0.5s ease-out;
         }
         .login-container {
-            /* Cor do container de login (azul escuro) */
-            background-color: #161b22;
+            background-color: var(--bg-medium);
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
             width: 100%;
             max-width: 400px;
             text-align: center;
-            border: 1px solid #30363d;
         }
-        h1 {
-            color: #ffffff;
-            margin-bottom: 30px;
+        .login-container h1 { color: #fff; margin-bottom: 30px; }
+        .input-group { text-align: left; margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 0.9em; color: var(--text-secondary); margin-bottom: 5px; }
+        .input-group input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--bg-dark); color: var(--text-primary); font-size: 1em; }
+        .login-container button { width: 100%; padding: 15px; border: none; border-radius: 5px; background-color: var(--accent-green); color: white; font-weight: 600; font-size: 1em; cursor: pointer; transition: background-color 0.2s; }
+        .login-container button:hover:not(:disabled) { background-color: var(--accent-green-hover); }
+        .login-container button:disabled { background-color: #555; cursor: wait; }
+        #login-message { margin-top: 20px; font-weight: 600; min-height: 20px; color: var(--accent-red); }
+
+        /* --- DASHBOARD --- */
+        #dashboard-screen { display: flex; height: 100vh; }
+        .sidebar { width: 250px; background-color: var(--bg-medium); border-right: 1px solid var(--border-color); padding: 20px; }
+        .sidebar h2 { margin-bottom: 30px; }
+        .main-content { flex-grow: 1; padding: 20px; display: flex; flex-direction: column; }
+        .main-header { padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            padding-top: 20px;
         }
-        .input-group {
-            text-align: left;
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            font-size: 0.9em;
-            color: #c9d1d9;
-            margin-bottom: 5px;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #30363d;
-            border-radius: 5px;
-            background-color: #0d1117;
-            color: #e0e0e0;
-            font-size: 1em;
-            box-sizing: border-box;
-        }
-        input:focus {
-            outline: none;
-            /* Cor do destaque ao selecionar (azul vibrante) */
-            border-color: #388bfd;
-        }
-        button {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 5px;
-            /* Cor do botão (azul) */
-            background-color: #238636;
-            color: white;
-            font-weight: 600;
-            font-size: 1em;
+        .dashboard-card {
+            background-color: var(--bg-medium);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: transform 0.2s, border-color 0.2s;
         }
-        button:hover:not(:disabled) {
-            /* Cor do botão ao passar o mouse (azul mais claro) */
-            background-color: #2ea043;
+        .dashboard-card:hover { transform: translateY(-5px); border-color: var(--accent-green); }
+        .card-title { font-weight: 600; font-size: 1.1em; margin-bottom: 10px; }
+        .card-data { font-size: 2.5em; font-weight: 700; }
+
+        /* --- MODAL (POP-UP) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
-        button:disabled {
-            background-color: #555;
-            cursor: not-allowed;
+        .modal-overlay.is-visible { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background-color: var(--bg-medium);
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
         }
-        #message {
-            margin-top: 20px;
-            font-weight: 600;
-            min-height: 20px;
-        }
-        .hidden { display: none; }
-        #result-container {
-            margin-top: 20px;
-            text-align: left;
-            background-color: #0d1117;
-            padding: 15px;
-            border-radius: 5px;
-            border: 1px solid #30363d;
-        }
-        pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            color: #c9d1d9;
-            font-family: monospace;
-            font-size: 0.9em;
-        }
+        .modal-overlay.is-visible .modal-content { transform: translateY(0); }
+        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-primary); font-size: 1.5em; cursor: pointer; }
+        .modal-list li { list-style: none; padding: 10px; border-bottom: 1px solid var(--border-color); }
+        .modal-list li:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1>MoonFuturo</h1>
-        <form id="login-form">
-            <div class="input-group">
-                <label for="ra">Registro Acadêmico (RA):</label>
-                <input type="text" id="ra" name="ra" placeholder="Seu RA completo com dígito e UF" required>
-            </div>
-            <div class="input-group">
-                <label for="senha">Senha:</label>
-                <input type="password" id="senha" name="senha" placeholder="Sua senha da SED" required>
-            </div>
-            <button type="submit" id="login-button">Entrar</button>
-        </form>
-        <div id="message"></div>
-        <div id="result-container" class="hidden">
-            <h2>Dados das Turmas:</h2>
-            <pre id="result-data"></pre>
+
+    <div id="login-screen">
+        <div class="login-container">
+            <h1>MoonFuturo</h1>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="ra">Registro Acadêmico (RA):</label>
+                    <input type="text" id="ra" name="ra" placeholder="Seu RA completo com dígito e UF" required>
+                </div>
+                <div class="input-group">
+                    <label for="senha">Senha:</label>
+                    <input type="password" id="senha" name="senha" placeholder="Sua senha da SED" required>
+                </div>
+                <button type="submit" id="login-button">Entrar</button>
+            </form>
+            <div id="login-message"></div>
         </div>
     </div>
 
+    <div id="dashboard-screen" class="hidden">
+        <aside class="sidebar">
+            <h2>MoonFuturo</h2>
+            </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h1 id="welcome-message"></h1>
+            </header>
+            <div class="cards-container">
+                <div class="dashboard-card" data-modal-target="faltas-modal">
+                    <div class="card-title">Faltas</div>
+                    <div class="card-data" id="faltas-count">0</div>
+                </div>
+                <div class="dashboard-card" data-modal-target="tarefas-modal">
+                    <div class="card-title">Tarefas Pendentes</div>
+                    <div class="card-data" id="tarefas-count">0</div>
+                </div>
+                <div class="dashboard-card" data-modal-target="conquistas-modal">
+                    <div class="card-title">Conquistas</div>
+                    <div class="card-data" id="conquistas-count">0</div>
+                </div>
+                <div class="dashboard-card" data-modal-target="notificacoes-modal">
+                    <div class="card-title">Notificações</div>
+                    <div class="card-data" id="notificacoes-count">0</div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="tarefas-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2>Tarefas Pendentes</h2>
+            <ul class="modal-list" id="tarefas-list"></ul>
+        </div>
+    </div>
+    <div id="conquistas-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2>Minhas Conquistas</h2>
+            <ul class="modal-list" id="conquistas-list"></ul>
+        </div>
+    </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Elementos do DOM
+            const loginScreen = document.getElementById('login-screen');
+            const dashboardScreen = document.getElementById('dashboard-screen');
             const loginForm = document.getElementById('login-form');
-            const messageDiv = document.getElementById('message');
-            const resultContainer = document.getElementById('result-container');
-            const resultData = document.getElementById('result-data');
-            const button = document.getElementById('login-button');
+            const loginButton = document.getElementById('login-button');
+            const loginMessage = document.getElementById('login-message');
 
+            let fullData = {}; // Para armazenar todos os dados do dashboard
+
+            // Função principal de login
             loginForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
+                loginButton.disabled = true;
+                loginMessage.textContent = '✨ Autenticando e buscando dados...';
+
                 const ra = document.getElementById('ra').value;
                 const senha = document.getElementById('senha').value;
-                
-                // Definindo cores para as mensagens
-                const successColor = "#2ea043";
-                const errorColor = "#f85149";
-                const loadingColor = "#c9d1d9";
-
-                messageDiv.style.color = loadingColor;
-                messageDiv.textContent = '✨ Autenticando e buscando dados...';
-                button.disabled = true;
-                resultContainer.classList.add('hidden');
 
                 try {
                     const response = await fetch('/api/login', {
@@ -160,21 +205,91 @@
                     const data = await response.json();
 
                     if (!response.ok) {
-                        throw new Error(data.error || 'Ocorreu um erro desconhecido.');
+                        throw new Error(data.error || 'Erro desconhecido.');
                     }
                     
-                    messageDiv.style.color = successColor;
-                    messageDiv.textContent = '✅ Sucesso! Dados carregados.';
-                    resultData.textContent = JSON.stringify(data, null, 2);
-                    resultContainer.classList.remove('hidden');
+                    fullData = data;
+                    showDashboard();
 
                 } catch (error) {
-                    messageDiv.style.color = errorColor;
-                    messageDiv.textContent = `❌ Erro: ${error.message}`;
+                    loginMessage.textContent = `❌ ${error.message}`;
                 } finally {
-                    button.disabled = false;
+                    loginButton.disabled = false;
                 }
             });
+
+            function showDashboard() {
+                populateDashboard();
+                setupEventListeners();
+                
+                loginScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loginScreen.classList.add('hidden');
+                    dashboardScreen.classList.remove('hidden');
+                }, 500); // Sincronizado com a transição do CSS
+            }
+
+            function populateDashboard() {
+                // Preenche o cabeçalho
+                const firstName = fullData.userInfo.nome.split(' ')[0];
+                document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${firstName}!`;
+
+                // Preenche os cards
+                document.getElementById('faltas-count').textContent = fullData.faltas?.length || 0;
+                document.getElementById('tarefas-count').textContent = fullData.tarefas?.length || 0;
+                document.getElementById('conquistas-count').textContent = fullData.conquistas?.length || 0;
+                document.getElementById('notificacoes-count').textContent = fullData.notificacoes?.length || 0;
+            }
+
+            function setupEventListeners() {
+                // Event Listeners para os cards abrirem os modais
+                document.querySelectorAll('.dashboard-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const modalId = card.getAttribute('data-modal-target');
+                        if (modalId) {
+                            showModal(modalId);
+                        }
+                    });
+                });
+
+                // Event Listeners para os botões de fechar dos modais
+                document.querySelectorAll('.modal-close').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const modalOverlay = button.closest('.modal-overlay');
+                        if (modalOverlay) {
+                            hideModal(modalOverlay.id);
+                        }
+                    });
+                });
+            }
+
+            function showModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (!modal) return;
+
+                // Preenche o conteúdo do modal dinamicamente
+                if (modalId === 'tarefas-modal') {
+                    const list = document.getElementById('tarefas-list');
+                    list.innerHTML = fullData.tarefas.length > 0
+                        ? fullData.tarefas.map(t => `<li>${t.name || 'Tarefa sem nome'}</li>`).join('')
+                        : '<li>Nenhuma tarefa pendente.</li>';
+                } else if (modalId === 'conquistas-modal') {
+                    const list = document.getElementById('conquistas-list');
+                    list.innerHTML = fullData.conquistas.length > 0
+                        ? fullData.conquistas.map(c => `<li>${c.nome || 'Conquista sem nome'}</li>`).join('')
+                        : '<li>Nenhuma conquista encontrada.</li>';
+                }
+                // Adicionar lógica para outros modais aqui...
+
+                modal.classList.add('is-visible');
+            }
+
+            function hideModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.remove('is-visible');
+                }
+            }
         });
     </script>
 </body>
