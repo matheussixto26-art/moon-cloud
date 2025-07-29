@@ -24,21 +24,17 @@ module.exports = async (req, res) => {
             }
         );
 
-        // ======================= LINHA DE DEBATE =======================
-        // A linha abaixo irá "imprimir" a resposta completa da SED nos logs da Vercel
-        console.log('RESPOSTA COMPLETA DA API DA SED:', JSON.stringify(loginResponse.data, null, 2));
+        // ======================= CORREÇÃO FINAL =======================
+        // Pegando o token e o código do aluno nos lugares corretos, conforme a resposta da API
+        const token = loginResponse.data.token;
+        const codigoAluno = loginResponse.data.DadosUsuario.CD_USUARIO;
         // =============================================================
 
-        const token = loginResponse.data.token;
-        const codigoAluno = loginResponse.data.codigoAluno;
-
         if (!token || !codigoAluno) {
-            // Agora retornamos a mensagem da API, se houver uma.
-            const apiMessage = loginResponse.data.message || 'Token ou Código do Aluno não retornados pela API.';
-            return res.status(401).json({ error: `Credenciais rejeitadas. (Detalhe: ${apiMessage})` });
+            return res.status(401).json({ error: 'Credenciais inválidas. A API não retornou os dados esperados.' });
         }
         
-        // Se o login for bem-sucedido, continuamos normalmente
+        // Se o login foi bem-sucedido, buscamos as turmas
         const turmasResponse = await axios.get(
             `https://sedintegracoes.educacao.sp.gov.br/apihubintegracoes/api/v2/Turma/ListarTurmasPorAluno?codigoAluno=${codigoAluno}`,
             {
