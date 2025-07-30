@@ -51,20 +51,20 @@ module.exports = async (req, res) => {
 
         let publicationTargetsQuery = '';
         if (roomUserData && roomUserData.rooms) {
-            // Extrai todos os `publication_target` e IDs de `group_categories`
             const targets = [];
             roomUserData.rooms.forEach(room => {
-                targets.push(room.publication_target);
+                targets.push(room.name); // O 'name' da room é um publication_target
                 if (room.group_categories) {
                     room.group_categories.forEach(group => targets.push(group.id));
                 }
             });
-            const uniqueTargets = [...new Set(targets)]; // Remove duplicados
+            const uniqueTargets = [...new Set(targets)];
             publicationTargetsQuery = uniqueTargets.map(target => `publication_target[]=${encodeURIComponent(target)}`).join('&');
         }
 
         // ETAPA 4: Buscar dados do dashboard em paralelo
         const codigoAluno = userInfo.CD_USUARIO;
+        const [raNumber, raDigit, raUf] = user.match(/^(\d+)(\d)(\w+)$/).slice(1);
 
         const requests = [
              fetchApiData({
@@ -91,7 +91,6 @@ module.exports = async (req, res) => {
 
         const [faltasData, tarefas, conquistas, notificacoes] = await Promise.all(requests);
         
-        // Extrai nome da escola dos dados das "salas"
         if(roomUserData && roomUserData.rooms && roomUserData.rooms[0]?.meta?.nome_escola) {
             userInfo.NOME_ESCOLA = roomUserData.rooms[0].meta.nome_escola;
         }
