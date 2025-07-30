@@ -22,6 +22,7 @@ module.exports = async (req, res) => {
     }
 
     try {
+        // ETAPA 1: Login Principal
         const loginResponse = await axios.post(
             "https://sedintegracoes.educacao.sp.gov.br/credenciais/api/LoginCompletoToken",
             { user, senha },
@@ -30,45 +31,40 @@ module.exports = async (req, res) => {
 
         const tokenA = loginResponse.data.token;
         const userInfo = loginResponse.data.DadosUsuario;
+        if (!tokenA || !userInfo) return res.status(401).json({ error: 'Credenciais inválidas.' });
 
-        if (!tokenA || !userInfo) {
-            return res.status(401).json({ error: 'Credenciais inválidas.' });
-        }
-
+        // ETAPA 2: Troca de Token
         const exchangeResponse = await axios.post(
             "https://edusp-api.ip.tv/registration/edusp/token",
             { token: tokenA },
             { headers: { "Content-Type": "application/json", "x-api-realm": "edusp", "x-api-platform": "webclient" } }
         );
-        
         const tokenB = exchangeResponse.data.auth_token;
-
-        if (!tokenB) {
-            return res.status(500).json({ error: 'Falha ao obter o token secundário.' });
-        }
+        if (!tokenB) return res.status(500).json({ error: 'Falha ao obter o token secundário.' });
         
+        // ETAPA 3: Buscar "salas" para obter os alvos de publicação
         const roomUserData = await fetchApiData({
             method: 'get',
             url: 'https://edusp-api.ip.tv/room/user?list_all=true&with_cards=true',
             headers: { "x-api-key": tokenB }
         });
-
         let publicationTargetsQuery = '';
         if (roomUserData && roomUserData.rooms) {
             const targets = roomUserData.rooms.map(room => `publication_target=${encodeURIComponent(room.publication_target)}`);
             publicationTargetsQuery = targets.join('&');
         }
 
+        // ETAPA 4: Buscar dados do dashboard em paralelo
         const codigoAluno = userInfo.CD_USUARIO;
         const [raNumber, raDigit, raUf] = user.match(/^(\d+)(\d)(\w+)$/).slice(1);
 
         const requests = [
-             fetchApiData({ // FALTAS ANUAIS (MAIS PRECISO)
+             fetchApiData({
                 method: 'get',
                 url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFrequenciaAluno?anoLetivo=${new Date().getFullYear()}&codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
-            fetchApiData({ // TAREFAS (INCLUINDO EXPIRADAS)
+            fetchApiData({ // Buscando TODAS as tarefas
                 method: 'get',
                 url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=true&limit=100&filter_expired=false&with_answer=true&${publicationTargetsQuery}`,
                 headers: { "x-api-key": tokenB }
@@ -98,6 +94,7 @@ module.exports = async (req, res) => {
 
         const dashboardData = {
             userInfo: userInfo,
+            auth_token: tokenB, // Enviando o tokenB para o frontend usar nas chamadas de tarefas
             faltas: faltasData?.data?.disciplinas || [],
             tarefas: tarefas || [],
             conquistas: conquistas?.data || [],
@@ -105,11 +102,10 @@ module.exports = async (req, res) => {
         };
 
         res.status(200).json(dashboardData);
-
     } catch (error) {
         const errorMessage = error.response?.data?.statusRetorno || 'RA ou Senha inválidos, ou falha em uma das APIs críticas.';
         console.error('ERRO GERAL NO PROCESSO:', error.response ? error.response.data : error.message);
         return res.status(error.response?.status || 500).json({ error: errorMessage });
     }
 };
-                
+                          
