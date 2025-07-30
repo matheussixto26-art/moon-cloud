@@ -1,5 +1,13 @@
 const axios = require('axios');
 
+// Função para criar os cabeçalhos que imitam o Taskitos/MoonScripts
+const getEduspHeaders = (token) => ({
+    'x-api-key': token,
+    'x-client-domain': 'taskitos.cupiditys.lol',
+    'origin': 'https://taskitos.cupiditys.lol',
+    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36'
+});
+
 async function fetchApiData(requestConfig) {
     try {
         const response = await axios(requestConfig);
@@ -42,20 +50,20 @@ module.exports = async (req, res) => {
         const tokenB = exchangeResponse.data.auth_token;
         if (!tokenB) return res.status(500).json({ error: 'Falha ao obter o token secundário.' });
         
-        // ETAPA 3: Buscar "salas" para obter os alvos de publicação (A SUA DESCOBERTA!)
+        // ETAPA 3: Buscar "salas" para obter os alvos de publicação
         const roomUserData = await fetchApiData({
             method: 'get',
             url: 'https://edusp-api.ip.tv/room/user?list_all=true',
-            headers: { "x-api-key": tokenB }
+            headers: getEduspHeaders(tokenB) // Usando os cabeçalhos corretos
         });
 
         let publicationTargetsQuery = '';
         if (roomUserData && roomUserData.rooms) {
             const targets = [];
             roomUserData.rooms.forEach(room => {
-                targets.push(room.publication_target); // O 'publication_target' da própria sala
+                targets.push(room.publication_target);
                 if (room.group_categories) {
-                    room.group_categories.forEach(group => targets.push(group.id)); // E os IDs dos grupos
+                    room.group_categories.forEach(group => targets.push(group.id));
                 }
             });
             const uniqueTargets = [...new Set(targets)];
@@ -64,18 +72,17 @@ module.exports = async (req, res) => {
 
         // ETAPA 4: Buscar dados do dashboard em paralelo
         const codigoAluno = userInfo.CD_USUARIO;
-        const anoLetivo = new Date().getFullYear();
 
         const requests = [
-             fetchApiData({ // USANDO A API DE FREQUÊNCIA ANUAL
+             fetchApiData({
                 method: 'get',
-                url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFrequenciaAluno?anoLetivo=${anoLetivo}&codigoAluno=${codigoAluno}`,
+                url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
-            fetchApiData({ // USANDO A URL EXATA QUE VOCÊ DESCOBRIU
+            fetchApiData({
                 method: 'get',
                 url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&is_essay=false&is_exam=false&answer_statuses=draft&answer_statuses=pending&with_answer=true&with_apply_moment=true&limit=100&filter_expired=true&offset=0&${publicationTargetsQuery}`,
-                headers: { "x-api-key": tokenB }
+                headers: getEduspHeaders(tokenB) // Usando os cabeçalhos corretos
             }),
             fetchApiData({
                 method: 'get',
@@ -98,7 +105,7 @@ module.exports = async (req, res) => {
         const dashboardData = {
             userInfo: userInfo,
             auth_token: tokenB,
-            faltas: faltasData?.data?.disciplinas || [],
+            faltas: faltasData?.data || [],
             tarefas: tarefas || [],
             conquistas: conquistas?.data || [],
             notificacoes: notificacoes || []
