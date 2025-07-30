@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
         const tokenB = exchangeResponse.data.auth_token;
         if (!tokenB) return res.status(500).json({ error: 'Falha ao obter o token secundário.' });
         
-        // ETAPA 3: Buscar "salas" para obter os alvos de publicação
+        // ETAPA 3: Buscar "salas" para obter os alvos de publicação (A SUA DESCOBERTA!)
         const roomUserData = await fetchApiData({
             method: 'get',
             url: 'https://edusp-api.ip.tv/room/user?list_all=true&with_cards=true',
@@ -64,7 +64,6 @@ module.exports = async (req, res) => {
 
         // ETAPA 4: Buscar dados do dashboard em paralelo
         const codigoAluno = userInfo.CD_USUARIO;
-        const [raNumber, raDigit, raUf] = user.match(/^(\d+)(\d)(\w+)$/).slice(1);
 
         const requests = [
              fetchApiData({
@@ -72,10 +71,9 @@ module.exports = async (req, res) => {
                 url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
-            // CORREÇÃO: Buscando apenas tarefas pendentes e em rascunho.
-            fetchApiData({
+            fetchApiData({ // Usando a URL correta com todos os filtros
                 method: 'get',
-                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&answer_statuses=draft&answer_statuses=pending&with_answer=true&limit=100&${publicationTargetsQuery}`,
+                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&is_essay=false&is_exam=false&answer_statuses=draft&answer_statuses=pending&with_answer=true&with_apply_moment=true&limit=100&filter_expired=true&offset=0&${publicationTargetsQuery}`,
                 headers: { "x-api-key": tokenB }
             }),
             fetchApiData({
@@ -92,7 +90,6 @@ module.exports = async (req, res) => {
 
         const [faltasData, tarefas, conquistas, notificacoes] = await Promise.all(requests);
         
-        // CORREÇÃO: Pegando o nome da escola dos dados das "salas"
         if(roomUserData && roomUserData.rooms && roomUserData.rooms[0]?.meta?.nome_escola) {
             userInfo.NOME_ESCOLA = roomUserData.rooms[0].meta.nome_escola;
         }
@@ -114,3 +111,4 @@ module.exports = async (req, res) => {
         return res.status(error.response?.status || 500).json({ error: errorMessage });
     }
 };
+
