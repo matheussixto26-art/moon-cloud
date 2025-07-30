@@ -5,7 +5,9 @@ async function fetchApiData(requestConfig) {
         const response = await axios(requestConfig);
         return response.data;
     } catch (error) {
-        console.error(`Falha ao buscar dados de: ${requestConfig.url}`, error.message);
+        // Log detalhado para a falha específica
+        const errorDetails = error.response ? JSON.stringify(error.response.data) : error.message;
+        console.error(`Falha ao buscar dados de: ${requestConfig.url}. Detalhes: ${errorDetails}`);
         return null;
     }
 }
@@ -32,31 +34,36 @@ module.exports = async (req, res) => {
         const userInfo = loginResponse.data.DadosUsuario;
 
         if (!tokenA || !userInfo) {
-            return res.status(401).json({ error: 'Credenciais inválidas ou resposta da API de login incompleta.' });
+            return res.status(401).json({ error: 'Credenciais inválidas.' });
         }
 
         // ETAPA 2: Troca de Token
         const exchangeResponse = await axios.post(
             "https://edusp-api.ip.tv/registration/edusp/token",
             { token: tokenA },
-            { 
-                headers: { 
-                    "Content-Type": "application/json",
-                    "x-api-realm": "edusp",
-                    "x-api-platform": "webclient"
-                } 
-            }
+            { headers: { "Content-Type": "application/json", "x-api-realm": "edusp", "x-api-platform": "webclient" } }
         );
         
-        // ======================= A CORREÇÃO FINAL ESTÁ AQUI =======================
-        const tokenB = exchangeResponse.data.auth_token; // O nome correto é "auth_token"
-        // ========================================================================
+        const tokenB = exchangeResponse.data.auth_token;
 
         if (!tokenB) {
             return res.status(500).json({ error: 'Falha ao obter o token secundário (auth_token).' });
         }
         
-        // ETAPA 3: Busca de dados em paralelo
+        // ETAPA 3: Buscar os "alvos de publicação" (NECESSÁRIO PARA AS TAREFAS)
+        const roomUserData = await fetchApiData({
+            method: 'get',
+            url: 'https://edusp-api.ip.tv/room/user?list_all=true&with_cards=true',
+            headers: { "x-api-key": tokenB }
+        });
+
+        let publicationTargetsQuery = '';
+        if (roomUserData && roomUserData.rooms) {
+            const targets = roomUserData.rooms.map(room => `publication_target=${encodeURIComponent(room.publication_target)}`);
+            publicationTargetsQuery = targets.join('&');
+        }
+
+        // ETAPA 4: Buscar os dados restantes em paralelo
         const codigoAluno = userInfo.CD_USUARIO;
 
         const requests = [
@@ -65,9 +72,10 @@ module.exports = async (req, res) => {
                 url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
+            // A requisição de tarefas agora inclui os "alvos" que buscamos
             fetchApiData({
                 method: 'get',
-                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&filter_expired=true&is_exam=false&with_answer=true`,
+                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&filter_expired=true&is_exam=false&with_answer=true&${publicationTargetsQuery}`,
                 headers: { "x-api-key": tokenB }
             }),
             fetchApiData({
@@ -99,4 +107,3 @@ module.exports = async (req, res) => {
         return res.status(error.response?.status || 500).json({ error: 'RA ou Senha inválidos, ou falha em uma das APIs críticas.' });
     }
 };
-
