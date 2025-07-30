@@ -53,9 +53,9 @@ module.exports = async (req, res) => {
         if (roomUserData && roomUserData.rooms) {
             const targets = [];
             roomUserData.rooms.forEach(room => {
-                targets.push(room.publication_target);
+                targets.push(room.publication_target); // O 'publication_target' da própria sala
                 if (room.group_categories) {
-                    room.group_categories.forEach(group => targets.push(group.id));
+                    room.group_categories.forEach(group => targets.push(group.id)); // E os IDs dos grupos
                 }
             });
             const uniqueTargets = [...new Set(targets)];
@@ -64,14 +64,15 @@ module.exports = async (req, res) => {
 
         // ETAPA 4: Buscar dados do dashboard em paralelo
         const codigoAluno = userInfo.CD_USUARIO;
+        const anoLetivo = new Date().getFullYear();
 
         const requests = [
-             fetchApiData({
+             fetchApiData({ // USANDO A API DE FREQUÊNCIA ANUAL
                 method: 'get',
-                url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
+                url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFrequenciaAluno?anoLetivo=${anoLetivo}&codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
-            fetchApiData({
+            fetchApiData({ // USANDO A URL EXATA QUE VOCÊ DESCOBRIU
                 method: 'get',
                 url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&is_essay=false&is_exam=false&answer_statuses=draft&answer_statuses=pending&with_answer=true&with_apply_moment=true&limit=100&filter_expired=true&offset=0&${publicationTargetsQuery}`,
                 headers: { "x-api-key": tokenB }
@@ -97,7 +98,7 @@ module.exports = async (req, res) => {
         const dashboardData = {
             userInfo: userInfo,
             auth_token: tokenB,
-            faltas: faltasData?.data || [],
+            faltas: faltasData?.data?.disciplinas || [],
             tarefas: tarefas || [],
             conquistas: conquistas?.data || [],
             notificacoes: notificacoes || []
@@ -111,4 +112,4 @@ module.exports = async (req, res) => {
         return res.status(error.response?.status || 500).json({ error: errorMessage });
     }
 };
-           
+
