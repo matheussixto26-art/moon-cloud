@@ -43,19 +43,23 @@ module.exports = async (req, res) => {
             { 
                 headers: { 
                     "Content-Type": "application/json",
-                    // --- A CORREÇÃO ESTÁ AQUI ---
                     "x-api-realm": "edusp",
                     "x-api-platform": "webclient"
                 } 
             }
         );
-        console.log("SUCESSO: Troca de Token OK.");
         
+        // ======================= NOVA LINHA DE DEBATE =======================
+        // A linha abaixo irá "imprimir" a resposta completa da troca de token
+        console.log('RESPOSTA COMPLETA DA TROCA DE TOKEN:', JSON.stringify(exchangeResponse.data, null, 2));
+        // ====================================================================
+
         const tokenB = exchangeResponse.data.token;
 
         if (!tokenB) {
             return res.status(500).json({ error: 'Falha ao obter o token secundário (x-api-key).' });
         }
+        console.log("SUCESSO: Troca de Token OK.");
         
         console.log("ETAPA 3: Iniciando busca de dados em paralelo...");
         const codigoAluno = userInfo.CD_USUARIO;
@@ -98,7 +102,6 @@ module.exports = async (req, res) => {
 
     } catch (error) {
         console.error('ERRO GERAL NO PROCESSO:', error.response ? error.response.data : error.message);
-        console.error('Objeto de erro completo:', error);
         return res.status(error.response?.status || 500).json({ error: 'RA ou Senha inválidos, ou falha em uma das APIs críticas.' });
     }
 };
