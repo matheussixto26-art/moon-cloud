@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
 
     const { type, taskId, token, room, answers } = req.body;
 
-    if (!type || !taskId || !token || !room) {
+    if (!type || !token) {
         return res.status(400).json({ error: 'Parâmetros insuficientes.' });
     }
     
@@ -15,15 +15,17 @@ module.exports = async (req, res) => {
     let payload;
 
     if (type === 'preview') {
+        if (!taskId || !room) return res.status(400).json({ error: 'taskId e room são necessários para preview.' });
         url = 'https://edusp-api.ip.tv/tms/task/preview';
         payload = { task_id: taskId, publication_target: room };
     } else if (type === 'submit') {
+        if (!taskId || !room || !answers) return res.status(400).json({ error: 'taskId, room e answers são necessários para submit.' });
         url = 'https://edusp-api.ip.tv/tms/answer';
         payload = {
             task_id: taskId,
             publication_target: room,
             status: 'submitted',
-            answers: answers // As respostas formatadas pelo frontend
+            answers: answers
         };
     } else {
         return res.status(400).json({ error: 'Tipo de ação inválido.' });
@@ -31,10 +33,7 @@ module.exports = async (req, res) => {
 
     try {
         const response = await axios.post(url, payload, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': token,
-            }
+            headers: { 'Content-Type': 'application/json', 'x-api-key': token }
         });
         return res.status(200).json(response.data);
     } catch (error) {
@@ -43,4 +42,3 @@ module.exports = async (req, res) => {
         return res.status(error.response?.status || 500).json({ error: `Falha na API de tarefa: ${type}`, details: errorDetails });
     }
 };
-
