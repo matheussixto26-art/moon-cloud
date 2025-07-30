@@ -1,10 +1,10 @@
 const axios = require('axios');
 
-// Função para criar os cabeçalhos que imitam o Taskitos/MoonScripts
+// A FUNÇÃO MÁGICA QUE VOCÊ DESCOBRIU
 const getEduspHeaders = (token) => ({
     'x-api-key': token,
-    'x-client-domain': 'taskitos.cupiditys.lol',
-    'origin': 'https://taskitos.cupiditys.lol',
+    'x-client-domain': 'taskitos.cupiditys.lol', // Cabeçalho crucial
+    'origin': 'https://taskitos.cupiditys.lol',      // Cabeçalho crucial
     'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36'
 });
 
@@ -54,7 +54,7 @@ module.exports = async (req, res) => {
         const roomUserData = await fetchApiData({
             method: 'get',
             url: 'https://edusp-api.ip.tv/room/user?list_all=true',
-            headers: getEduspHeaders(tokenB) // Usando os cabeçalhos corretos
+            headers: getEduspHeaders(tokenB) // USANDO OS CABEÇALHOS CORRETOS
         });
 
         let publicationTargetsQuery = '';
@@ -72,6 +72,7 @@ module.exports = async (req, res) => {
 
         // ETAPA 4: Buscar dados do dashboard em paralelo
         const codigoAluno = userInfo.CD_USUARIO;
+        const anoLetivo = new Date().getFullYear();
 
         const requests = [
              fetchApiData({
@@ -82,7 +83,7 @@ module.exports = async (req, res) => {
             fetchApiData({
                 method: 'get',
                 url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&is_essay=false&is_exam=false&answer_statuses=draft&answer_statuses=pending&with_answer=true&with_apply_moment=true&limit=100&filter_expired=true&offset=0&${publicationTargetsQuery}`,
-                headers: getEduspHeaders(tokenB) // Usando os cabeçalhos corretos
+                headers: getEduspHeaders(tokenB) // USANDO OS CABEÇALHOS CORRETOS
             }),
             fetchApiData({
                 method: 'get',
