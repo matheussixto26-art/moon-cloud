@@ -42,21 +42,29 @@ module.exports = async (req, res) => {
         const tokenB = exchangeResponse.data.auth_token;
         if (!tokenB) return res.status(500).json({ error: 'Falha ao obter o token secundário.' });
         
-        // ETAPA 3: Buscar "salas" para obter os alvos de publicação
+        // ETAPA 3: Buscar "salas" para obter os alvos de publicação (publication_target)
         const roomUserData = await fetchApiData({
             method: 'get',
             url: 'https://edusp-api.ip.tv/room/user?list_all=true&with_cards=true',
             headers: { "x-api-key": tokenB }
         });
+
         let publicationTargetsQuery = '';
         if (roomUserData && roomUserData.rooms) {
-            const targets = roomUserData.rooms.map(room => `publication_target[]=${encodeURIComponent(room.publication_target)}`);
-            publicationTargetsQuery = targets.join('&');
+            // Extrai todos os `publication_target` e IDs de `group_categories`
+            const targets = [];
+            roomUserData.rooms.forEach(room => {
+                targets.push(room.publication_target);
+                if (room.group_categories) {
+                    room.group_categories.forEach(group => targets.push(group.id));
+                }
+            });
+            const uniqueTargets = [...new Set(targets)]; // Remove duplicados
+            publicationTargetsQuery = uniqueTargets.map(target => `publication_target[]=${encodeURIComponent(target)}`).join('&');
         }
 
         // ETAPA 4: Buscar dados do dashboard em paralelo
         const codigoAluno = userInfo.CD_USUARIO;
-        const [raNumber, raDigit, raUf] = user.match(/^(\d+)(\d)(\w+)$/).slice(1);
 
         const requests = [
              fetchApiData({
@@ -66,7 +74,7 @@ module.exports = async (req, res) => {
             }),
             fetchApiData({
                 method: 'get',
-                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&is_essay=false&is_exam=false&answer_statuses=draft&answer_statuses=pending&with_answer=true&with_apply_moment=true&limit=100&filter_expired=true&offset=0&${publicationTargetsQuery}`,
+                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=true&limit=100&filter_expired=false&with_answer=true&${publicationTargetsQuery}`,
                 headers: { "x-api-key": tokenB }
             }),
             fetchApiData({
@@ -78,18 +86,14 @@ module.exports = async (req, res) => {
                 method: 'get',
                 url: `https://sedintegracoes.educacao.sp.gov.br/cmspwebservice/api/sala-do-futuro-alunos/consulta-notificacao?userId=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "1a758fd2f6be41448079c9616a861b91" }
-            }),
-            fetchApiData({
-                method: 'get',
-                url: `https://sedintegracoes.educacao.sp.gov.br/alunoapi/api/Aluno/ExibirAluno?inNumRA=${raNumber}&inDigitoRA=${raDigit}&inSiglaUFRA=${raUf}`,
-                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "b141f65a88354e078a9d4fdb1df29867" }
             })
         ];
 
-        const [faltasData, tarefas, conquistas, notificacoes, dadosEscola] = await Promise.all(requests);
+        const [faltasData, tarefas, conquistas, notificacoes] = await Promise.all(requests);
         
-        if(dadosEscola && dadosEscola.aluno) {
-            userInfo.NOME_ESCOLA = dadosEscola.aluno.nmEscola;
+        // Extrai nome da escola dos dados das "salas"
+        if(roomUserData && roomUserData.rooms && roomUserData.rooms[0]?.meta?.nome_escola) {
+            userInfo.NOME_ESCOLA = roomUserData.rooms[0].meta.nome_escola;
         }
 
         const dashboardData = {
@@ -102,6 +106,7 @@ module.exports = async (req, res) => {
         };
 
         res.status(200).json(dashboardData);
+
     } catch (error) {
         const errorMessage = error.response?.data?.statusRetorno || 'RA ou Senha inválidos, ou falha em uma das APIs críticas.';
         console.error('ERRO GERAL NO PROCESSO:', error.response ? error.response.data : error.message);
