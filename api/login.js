@@ -102,3 +102,4 @@ module.exports = async (req, res) => {
         return res.status(error.response?.status || 500).json({ error: 'RA ou Senha inválidos, ou falha em uma das APIs críticas.' });
     }
 };
+
