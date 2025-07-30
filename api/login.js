@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
         // ETAPA 3: Buscar "salas" para obter os alvos de publicação (A SUA DESCOBERTA!)
         const roomUserData = await fetchApiData({
             method: 'get',
-            url: 'https://edusp-api.ip.tv/room/user?list_all=true&with_cards=true',
+            url: 'https://edusp-api.ip.tv/room/user?list_all=true',
             headers: { "x-api-key": tokenB }
         });
 
@@ -71,7 +71,7 @@ module.exports = async (req, res) => {
                 url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
-            fetchApiData({ // Usando a URL correta com todos os filtros
+            fetchApiData({
                 method: 'get',
                 url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&is_essay=false&is_exam=false&answer_statuses=draft&answer_statuses=pending&with_answer=true&with_apply_moment=true&limit=100&filter_expired=true&offset=0&${publicationTargetsQuery}`,
                 headers: { "x-api-key": tokenB }
@@ -111,4 +111,4 @@ module.exports = async (req, res) => {
         return res.status(error.response?.status || 500).json({ error: errorMessage });
     }
 };
-
+           
