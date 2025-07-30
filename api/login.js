@@ -21,13 +21,12 @@ module.exports = async (req, res) => {
     }
 
     try {
-        console.log("ETAPA 1: Iniciando Login Principal...");
+        // ETAPA 1: Login Principal
         const loginResponse = await axios.post(
             "https://sedintegracoes.educacao.sp.gov.br/credenciais/api/LoginCompletoToken",
             { user, senha },
             { headers: { "Ocp-Apim-Subscription-Key": "2b03c1db3884488795f79c37c069381a" } }
         );
-        console.log("SUCESSO: Login Principal OK.");
 
         const tokenA = loginResponse.data.token;
         const userInfo = loginResponse.data.DadosUsuario;
@@ -36,7 +35,7 @@ module.exports = async (req, res) => {
             return res.status(401).json({ error: 'Credenciais inválidas ou resposta da API de login incompleta.' });
         }
 
-        console.log("ETAPA 2: Iniciando Troca de Token...");
+        // ETAPA 2: Troca de Token
         const exchangeResponse = await axios.post(
             "https://edusp-api.ip.tv/registration/edusp/token",
             { token: tokenA },
@@ -49,19 +48,15 @@ module.exports = async (req, res) => {
             }
         );
         
-        // ======================= NOVA LINHA DE DEBATE =======================
-        // A linha abaixo irá "imprimir" a resposta completa da troca de token
-        console.log('RESPOSTA COMPLETA DA TROCA DE TOKEN:', JSON.stringify(exchangeResponse.data, null, 2));
-        // ====================================================================
-
-        const tokenB = exchangeResponse.data.token;
+        // ======================= A CORREÇÃO FINAL ESTÁ AQUI =======================
+        const tokenB = exchangeResponse.data.auth_token; // O nome correto é "auth_token"
+        // ========================================================================
 
         if (!tokenB) {
-            return res.status(500).json({ error: 'Falha ao obter o token secundário (x-api-key).' });
+            return res.status(500).json({ error: 'Falha ao obter o token secundário (auth_token).' });
         }
-        console.log("SUCESSO: Troca de Token OK.");
         
-        console.log("ETAPA 3: Iniciando busca de dados em paralelo...");
+        // ETAPA 3: Busca de dados em paralelo
         const codigoAluno = userInfo.CD_USUARIO;
 
         const requests = [
@@ -88,7 +83,6 @@ module.exports = async (req, res) => {
         ];
 
         const [faltas, tarefas, conquistas, notificacoes] = await Promise.all(requests);
-        console.log("SUCESSO: Busca de dados concluída.");
 
         const dashboardData = {
             userInfo: { nome: userInfo.NOME },
