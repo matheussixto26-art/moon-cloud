@@ -1,10 +1,11 @@
 const axios = require('axios');
 
-// Função para criar os cabeçalhos que imitam o Taskitos/MoonScripts
+// Adicionamos o cabeçalho 'Referer' para imitar perfeitamente o navegador
 const getEduspHeaders = (token) => ({
     'x-api-key': token,
     'x-client-domain': 'taskitos.cupiditys.lol',
     'origin': 'https://taskitos.cupiditys.lol',
+    'referer': 'https://saladofuturo.educacao.sp.gov.br/', // O ÚLTIMO SEGREDO
     'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36'
 });
 
@@ -13,7 +14,8 @@ async function fetchApiData(requestConfig) {
         const response = await axios(requestConfig);
         return response.data;
     } catch (error) {
-        console.error(`Falha ao buscar dados de: ${requestConfig.url}.`);
+        const errorDetails = error.response ? JSON.stringify(error.response.data) : error.message;
+        console.error(`Falha ao buscar dados de: ${requestConfig.url}. Detalhes: ${errorDetails}`);
         return null;
     }
 }
@@ -29,6 +31,7 @@ module.exports = async (req, res) => {
     }
 
     try {
+        // ETAPA 1: Login Principal
         const loginResponse = await axios.post(
             "https://sedintegracoes.educacao.sp.gov.br/credenciais/api/LoginCompletoToken",
             { user, senha },
@@ -39,6 +42,7 @@ module.exports = async (req, res) => {
         const userInfo = loginResponse.data.DadosUsuario;
         if (!tokenA || !userInfo) return res.status(401).json({ error: 'Credenciais inválidas.' });
 
+        // ETAPA 2: Troca de Token
         const exchangeResponse = await axios.post(
             "https://edusp-api.ip.tv/registration/edusp/token",
             { token: tokenA },
@@ -47,29 +51,40 @@ module.exports = async (req, res) => {
         const tokenB = exchangeResponse.data.auth_token;
         if (!tokenB) return res.status(500).json({ error: 'Falha ao obter o token secundário.' });
         
+        // ETAPA 3: Buscar "salas" para obter os alvos de publicação
         const roomUserData = await fetchApiData({
             method: 'get',
             url: 'https://edusp-api.ip.tv/room/user?list_all=true',
             headers: getEduspHeaders(tokenB)
         });
 
-        let targets = [];
+        let publicationTargetsQuery = '';
         if (roomUserData && roomUserData.rooms) {
+            const targets = [];
             roomUserData.rooms.forEach(room => {
                 targets.push(room.publication_target);
                 if (room.group_categories) {
                     room.group_categories.forEach(group => targets.push(group.id));
                 }
             });
-            targets = [...new Set(targets)];
+            const uniqueTargets = [...new Set(targets)];
+            publicationTargetsQuery = uniqueTargets.map(target => `publication_target[]=${encodeURIComponent(target)}`).join('&');
         }
 
+        // ETAPA 4: Buscar dados do dashboard em paralelo
         const codigoAluno = userInfo.CD_USUARIO;
-        const [faltasData, conquistas, notificacoes] = await Promise.all([
+        const anoLetivo = new Date().getFullYear();
+
+        const requests = [
              fetchApiData({
                 method: 'get',
                 url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
+            }),
+            fetchApiData({
+                method: 'get',
+                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&is_essay=false&is_exam=false&answer_statuses=draft&answer_statuses=pending&with_answer=true&with_apply_moment=true&limit=100&filter_expired=true&offset=0&${publicationTargetsQuery}`,
+                headers: getEduspHeaders(tokenB)
             }),
             fetchApiData({
                 method: 'get',
@@ -81,26 +96,29 @@ module.exports = async (req, res) => {
                 url: `https://sedintegracoes.educacao.sp.gov.br/cmspwebservice/api/sala-do-futuro-alunos/consulta-notificacao?userId=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "1a758fd2f6be41448079c9616a861b91" }
             })
-        ]);
+        ];
+
+        const [faltasData, tarefas, conquistas, notificacoes] = await Promise.all(requests);
         
         if(roomUserData && roomUserData.rooms && roomUserData.rooms[0]?.meta?.nome_escola) {
             userInfo.NOME_ESCOLA = roomUserData.rooms[0].meta.nome_escola;
         }
 
-        const initialData = {
+        const dashboardData = {
             userInfo: userInfo,
             auth_token: tokenB,
-            targets: targets,
             faltas: faltasData?.data || [],
+            tarefas: tarefas || [],
             conquistas: conquistas?.data || [],
             notificacoes: notificacoes || []
         };
 
-        res.status(200).json(initialData);
+        res.status(200).json(dashboardData);
 
     } catch (error) {
-        const errorMessage = error.response?.data?.statusRetorno || 'RA ou Senha inválidos, ou falha na API.';
-        res.status(error.response?.status || 500).json({ error: errorMessage });
+        const errorMessage = error.response?.data?.statusRetorno || 'RA ou Senha inválidos, ou falha em uma das APIs críticas.';
+        console.error('ERRO GERAL NO PROCESSO:', error.response ? error.response.data : error.message);
+        return res.status(error.response?.status || 500).json({ error: errorMessage });
     }
 };
 
