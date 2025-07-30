@@ -1,200 +1,45 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoonFuturo</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-dark: #0d1117; --bg-medium: #161b22; --border-color: #3036d; --text-primary: #c9d1d9;
-            --text-secondary: #8b949e; --accent-color: #238636; --accent-color-hover: #2ea043; --accent-red: #da3633;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background-color: var(--bg-dark); color: var(--text-primary); font-family: 'Poppins', sans-serif; overflow: hidden; }
-        .hidden { display: none !important; }
-        .fade-in { animation: fadeIn 0.5s ease-in-out forwards; }
-        .fade-out { animation: fadeOut 0.5s ease-in-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+const axios = require('axios');
 
-        #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .login-container { background-color: var(--bg-medium); padding: 40px; border-radius: 10px; border: 1px solid var(--border-color); width: 100%; max-width: 400px; text-align: center; }
-        .login-container h1 { color: #fff; margin-bottom: 30px; }
-        .input-group { text-align: left; margin-bottom: 20px; }
-        .input-group label { display: block; font-size: 0.9em; color: var(--text-secondary); margin-bottom: 5px; }
-        .input-group input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-dark); color: var(--text-primary); }
-        .login-container button { width: 100%; padding: 15px; border: none; border-radius: 6px; background-color: var(--accent-color); color: white; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
-        .login-container button:hover:not(:disabled) { background-color: var(--accent-color-hover); }
-        .login-container button:disabled { background-color: #555; cursor: wait; }
-        #login-message { margin-top: 20px; font-weight: 600; min-height: 20px; color: var(--accent-red); }
+module.exports = async (req, res) => {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Método não permitido.' });
+    }
 
-        #dashboard-screen { display: flex; height: 100vh; }
-        .sidebar { width: 250px; background-color: var(--bg-medium); border-right: 1px solid var(--border-color); padding: 25px; display: flex; flex-direction: column; }
-        .sidebar h2 { margin-bottom: 40px; font-size: 1.8em; }
-        .main-content { flex-grow: 1; padding: 25px; display: flex; flex-direction: column; overflow-y: auto; }
-        .main-header { padding-bottom: 25px; border-bottom: 1px solid var(--border-color); }
-        .main-header h1 { font-size: 1.8em; }
-        .main-header p { color: var(--text-secondary); }
+    const { type, taskId, token, room, answers } = req.body;
 
-        .cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; padding-top: 25px; }
-        .dashboard-card { background-color: var(--bg-medium); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
-        .dashboard-card:hover { transform: translateY(-5px); border-color: var(--accent-color); }
-        .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        .card-header .icon { width: 24px; height: 24px; color: var(--text-secondary); }
-        .card-title { font-weight: 500; font-size: 1em; color: var(--text-secondary); }
-        .card-data { font-size: 2.8em; font-weight: 700; }
-
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-        .modal-overlay.is-visible { opacity: 1; pointer-events: all; }
-        .modal-content { background-color: var(--bg-medium); padding: 30px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; position: relative; }
-        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-primary); font-size: 1.5em; cursor: pointer; }
-        .modal-list { margin-top: 1.5rem; }
-        .list-item { list-style: none; padding: 15px; border-bottom: 1px solid var(--border-color); }
-        .list-item:last-child { border-bottom: none; }
-        .list-item h3 { font-size: 1.1em; margin-bottom: 5px; color: var(--text-primary); }
-        .list-item p { font-size: 0.9em; color: var(--text-secondary); }
-    </style>
-</head>
-<body>
-    <div id="login-screen">
-        <div class="login-container">
-            <h1>MoonFuturo</h1>
-            <form id="login-form">
-                <div class="input-group"><label for="ra">RA:</label><input type="text" id="ra" required></div>
-                <div class="input-group"><label for="senha">Senha:</label><input type="password" id="senha" required></div>
-                <button type="submit" id="login-button">Entrar</button>
-            </form>
-            <div id="login-message"></div>
-        </div>
-    </div>
-    <div id="dashboard-screen" class="hidden">
-        <aside class="sidebar"><h2>MoonFuturo</h2></aside>
-        <main class="main-content">
-            <header class="main-header">
-                <h1 id="welcome-message"></h1>
-                <p id="school-name"></p>
-            </header>
-            <div class="cards-container">
-                <div class="dashboard-card" data-modal-target="faltas-modal"><div class="card-header"><span class="card-title">Faltas Totais</span></div><div class="card-data" id="faltas-count">0</div></div>
-                <div class="dashboard-card" data-modal-target="tarefas-modal"><div class="card-header"><span class="card-title">Tarefas (Todas)</span></div><div class="card-data" id="tarefas-count">0</div></div>
-                <div class="dashboard-card" data-modal-target="conquistas-modal"><div class="card-header"><span class="card-title">Conquistas</span></div><div class="card-data" id="conquistas-count">0</div></div>
-                <div class="dashboard-card" data-modal-target="notificacoes-modal"><div class="card-header"><span class="card-title">Notificações</span></div><div class="card-data" id="notificacoes-count">0</div></div>
-            </div>
-        </main>
-    </div>
+    if (!type || !taskId || !token || !room) {
+        return res.status(400).json({ error: 'Parâmetros insuficientes.' });
+    }
     
-    <div id="faltas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Faltas por Disciplina</h2><ul class="modal-list" id="faltas-list"></ul></div></div>
-    <div id="tarefas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Lista de Tarefas</h2><ul class="modal-list" id="tarefas-list"></ul></div></div>
-    <div id="conquistas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Minhas Conquistas</h2><ul class="modal-list" id="conquistas-list"></ul></div></div>
-    <div id="notificacoes-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Notificações</h2><ul class="modal-list" id="notificacoes-list"></ul></div></div>
+    let url;
+    let payload;
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const loginScreen = document.getElementById('login-screen');
-            const dashboardScreen = document.getElementById('dashboard-screen');
-            const loginForm = document.getElementById('login-form');
-            const loginButton = document.getElementById('login-button');
-            const loginMessage = document.getElementById('login-message');
+    if (type === 'preview') {
+        url = 'https://edusp-api.ip.tv/tms/task/preview';
+        payload = { task_id: taskId, publication_target: room };
+    } else if (type === 'submit') {
+        url = 'https://edusp-api.ip.tv/tms/answer';
+        payload = {
+            task_id: taskId,
+            publication_target: room,
+            status: 'submitted',
+            answers: answers // As respostas formatadas pelo frontend
+        };
+    } else {
+        return res.status(400).json({ error: 'Tipo de ação inválido.' });
+    }
 
-            let fullData = {};
-
-            loginForm.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                loginButton.disabled = true;
-                loginMessage.textContent = '✨ Buscando dados...';
-                
-                try {
-                    const response = await fetch('/api/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user: document.getElementById('ra').value, senha: document.getElementById('senha').value }),
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error);
-                    fullData = data;
-                    showDashboard();
-                } catch (error) {
-                    loginMessage.textContent = `❌ ${error.message}`;
-                } finally {
-                    loginButton.disabled = false;
-                }
-            });
-
-            function showDashboard() {
-                populateDashboard();
-                setupEventListeners();
-                loginScreen.classList.add('fade-out');
-                setTimeout(() => {
-                    loginScreen.classList.add('hidden');
-                    dashboardScreen.classList.remove('hidden');
-                    dashboardScreen.classList.add('fade-in');
-                }, 500);
-            }
-
-            function populateDashboard() {
-                const userName = fullData.userInfo?.NOME || 'Aluno(a)';
-                const firstName = userName.split(' ')[0];
-                document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${firstName}!`;
-                document.getElementById('school-name').textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
-                
-                // Calculando o total de faltas
-                const totalFaltas = fullData.faltas.reduce((total, disciplina) => total + (disciplina.totalFaltas || 0), 0);
-                document.getElementById('faltas-count').textContent = totalFaltas;
-                
-                document.getElementById('tarefas-count').textContent = fullData.tarefas?.length || 0;
-                document.getElementById('conquistas-count').textContent = fullData.conquistas?.length || 0;
-                document.getElementById('notificacoes-count').textContent = fullData.notificacoes?.length || 0;
-            }
-
-            function setupEventListeners() {
-                document.querySelectorAll('.dashboard-card').forEach(card => card.addEventListener('click', () => showModal(card.dataset.modalTarget)));
-                document.querySelectorAll('.modal-overlay').forEach(modal => modal.addEventListener('click', (e) => e.target === modal && hideModal(modal.id)));
-                document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => hideModal(btn.closest('.modal-overlay').id)));
-            }
-
-            function showModal(modalId) {
-                const modal = document.getElementById(modalId);
-                const list = modal.querySelector('.modal-list');
-                let content = '<li class="list-item"><p>Nenhuma informação encontrada.</p></li>';
-
-                try {
-                    switch(modalId) {
-                        case 'faltas-modal':
-                            if (fullData.faltas && fullData.faltas.length > 0) {
-                                content = fullData.faltas.map(item => `<li class="list-item"><h3>${item.nomeDisciplina}</h3><p>Total de Faltas: ${item.totalFaltas}</p></li>`).join('');
-                            }
-                            break;
-                        case 'tarefas-modal':
-                            if (fullData.tarefas && fullData.tarefas.length > 0) {
-                                content = fullData.tarefas.map(item => `<li class="list-item"><h3>${item.title}</h3><p>${item.status === 'expired' ? 'Expirada' : 'Pendente'}</p></li>`).join('');
-                            }
-                            break;
-                        case 'conquistas-modal':
-                            if (fullData.conquistas && fullData.conquistas.length > 0) {
-                                content = fullData.conquistas.map(item => `<li class="list-item"><h3>${item.projeto}</h3><p>Medalha: ${item.medalha}</p></li>`).join('');
-                            }
-                            break;
-                        case 'notificacoes-modal':
-                            if (fullData.notificacoes && fullData.notificacoes.length > 0) {
-                                content = fullData.notificacoes.map(item => `<li class="list-item"><h3>${item.seesp_titulo}</h3><p>${item.seesp_mensagem}</p></li>`).join('');
-                            }
-                            break;
-                    }
-                } catch(e) { console.error("Erro ao popular modal:", e); }
-
-                list.innerHTML = content;
-                modal.classList.add('is-visible');
-            }
-
-            function hideModal(modalId) {
-                const modal = document.getElementById(modalId);
-                if (modal) modal.classList.remove('is-visible');
+    try {
+        const response = await axios.post(url, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': token,
             }
         });
-    </script>
-</body>
-        </html>
-        
+        return res.status(200).json(response.data);
+    } catch (error) {
+        const errorDetails = error.response ? error.response.data : error.message;
+        console.error(`Falha na API de tarefa (${type}):`, errorDetails);
+        return res.status(error.response?.status || 500).json({ error: `Falha na API de tarefa: ${type}`, details: errorDetails });
+    }
+};
