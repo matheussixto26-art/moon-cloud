@@ -103,7 +103,7 @@
                     loginArea.classList.add('hidden');
                     resultsArea.classList.remove('hidden');
                     
-                    const userName = initialData.userInfo?.NOME || initialData.userInfo?.NAME || 'Aluno(a)';
+                    const userName = initialData.userInfo?.NOME || initialData.userInfo?.NAME || 'Aluno(a) (Nome não encontrado)';
                     document.getElementById('welcome-message').textContent = `Investigação para: ${userName}`;
                     
                     // Preenche a Aba 1
