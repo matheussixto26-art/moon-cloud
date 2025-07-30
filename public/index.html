@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoonFuturo</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>MoonFuturo - Teste de Dados</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-dark: #0d1117;
@@ -15,108 +13,53 @@
             --text-primary: #c9d1d9;
             --text-secondary: #8b949e;
             --accent-green: #238636;
-            --accent-green-hover: #2ea043;
-            --accent-blue: #388bfd;
             --accent-red: #da3633;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background-color: var(--bg-dark);
             color: var(--text-primary);
             font-family: 'Poppins', sans-serif;
-            overflow: hidden;
-            -webkit-font-smoothing: antialiased;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
         }
-        .hidden { display: none !important; }
-        .fade-in { animation: fadeIn 0.5s ease-in-out forwards; }
-        .fade-out { animation: fadeOut 0.5s ease-in-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-
-        /* --- TELA DE LOGIN --- */
-        #login-screen {
-            display: flex; justify-content: center; align-items: center; height: 100vh;
-            transition: opacity 0.5s ease-out;
+        .container {
+            background-color: var(--bg-medium);
+            padding: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 800px;
         }
-        .login-container {
-            background-color: var(--bg-medium); padding: 40px; border-radius: 10px;
-            border: 1px solid var(--border-color); width: 100%; max-width: 400px; text-align: center;
-        }
-        .login-container h1 { color: #fff; margin-bottom: 30px; }
+        .hidden { display: none; }
+        h1 { text-align: center; margin-bottom: 30px; }
         .input-group { text-align: left; margin-bottom: 20px; }
-        .input-group label { display: block; font-size: 0.9em; color: var(--text-secondary); margin-bottom: 5px; }
-        .input-group input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-dark); color: var(--text-primary); font-size: 1em; }
-        .login-container button { width: 100%; padding: 15px; border: none; border-radius: 6px; background-color: var(--accent-green); color: white; font-weight: 600; font-size: 1em; cursor: pointer; transition: background-color 0.2s; }
-        .login-container button:hover:not(:disabled) { background-color: var(--accent-green-hover); }
-        .login-container button:disabled { background-color: #555; cursor: wait; }
-        #login-message { margin-top: 20px; font-weight: 600; min-height: 20px; color: var(--accent-red); }
+        label { display: block; font-size: 0.9em; color: var(--text-secondary); margin-bottom: 5px; }
+        input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--bg-dark); color: var(--text-primary); font-size: 1em; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 5px; background-color: var(--accent-green); color: white; font-weight: 600; font-size: 1em; cursor: pointer; }
+        #login-message { margin-top: 20px; font-weight: 600; min-height: 20px; text-align: center; }
 
-        /* --- DASHBOARD --- */
-        #dashboard-screen { display: flex; height: 100vh; }
-        .sidebar {
-            width: 250px; background-color: var(--bg-medium); border-right: 1px solid var(--border-color);
-            padding: 25px; display: flex; flex-direction: column;
+        #results-container { margin-top: 30px; }
+        pre {
+            background-color: var(--bg-dark);
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Roboto Mono', monospace;
+            color: var(--text-primary);
+            max-height: 60vh;
+            overflow-y: auto;
         }
-        .sidebar h2 { margin-bottom: 40px; font-size: 1.8em; }
-        .sidebar nav { flex-grow: 1; }
-        .sidebar nav a {
-            display: flex; align-items: center; gap: 12px;
-            color: var(--text-primary); text-decoration: none; padding: 12px;
-            border-radius: 6px; margin-bottom: 8px; transition: background-color 0.2s, color 0.2s;
-        }
-        .sidebar nav a:hover, .sidebar nav a.active { background-color: var(--border-color); }
-        .sidebar nav a svg { width: 20px; height: 20px; }
-        
-        .main-content { flex-grow: 1; padding: 25px; display: flex; flex-direction: column; }
-        .main-header { padding-bottom: 25px; border-bottom: 1px solid var(--border-color); }
-        .main-header h1 { font-size: 1.8em; }
-        .main-header p { color: var(--text-secondary); }
-
-        .cards-container {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px; padding-top: 25px;
-        }
-        .dashboard-card {
-            background-color: var(--bg-medium); border: 1px solid var(--border-color);
-            border-radius: 8px; padding: 20px; cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s;
-            display: flex; flex-direction: column;
-        }
-        .dashboard-card:hover { transform: translateY(-5px); border-color: var(--accent-blue); }
-        .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        .card-header .icon { width: 24px; height: 24px; color: var(--text-secondary); }
-        .card-title { font-weight: 500; font-size: 1em; color: var(--text-secondary); }
-        .card-data { font-size: 2.8em; font-weight: 700; flex-grow: 1; display: flex; align-items: center; }
-
-        /* --- MODAL (POP-UP) --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            display: flex; justify-content: center; align-items: center; z-index: 1000;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-        }
-        .modal-overlay.is-visible { opacity: 1; pointer-events: all; }
-        .modal-content {
-            background-color: var(--bg-medium); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color);
-            width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;
-            position: relative; transform: translateY(-20px) scale(0.95); transition: transform 0.3s ease;
-        }
-        .modal-overlay.is-visible .modal-content { transform: translateY(0) scale(1); }
-        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-primary); font-size: 1.5em; cursor: pointer; }
-        .modal-list { margin-top: 1.5rem; }
-        .modal-list .list-item { list-style: none; padding: 15px; border-bottom: 1px solid var(--border-color); }
-        .modal-list .list-item:last-child { border-bottom: none; }
-        .list-item h3 { font-size: 1.1em; margin-bottom: 5px; color: var(--text-primary); }
-        .list-item p { font-size: 0.9em; color: var(--text-secondary); }
-
     </style>
 </head>
 <body>
-
-    <div id="login-screen">
-        <div class="login-container">
-            <h1>MoonFuturo</h1>
+    <div class="container">
+        <div id="login-area">
+            <h1>MoonFuturo - Teste de Dados</h1>
             <form id="login-form">
                 <div class="input-group">
                     <label for="ra">Registro Acadêmico (RA):</label>
@@ -126,76 +69,34 @@
                     <label for="senha">Senha:</label>
                     <input type="password" id="senha" name="senha" placeholder="Sua senha da SED" required>
                 </div>
-                <button type="submit" id="login-button">Entrar</button>
+                <button type="submit" id="login-button">Verificar Dados</button>
             </form>
             <div id="login-message"></div>
         </div>
-    </div>
 
-    <div id="dashboard-screen" class="hidden">
-        <aside class="sidebar">
-            <h2>MoonFuturo</h2>
-            <nav>
-                <a href="#" class="active"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg> Início</a>
-                <a href="#"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> Documentos</a>
-                <a href="#"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg> Mensagens</a>
-            </nav>
-        </aside>
-        <main class="main-content">
-            <header class="main-header">
-                <h1 id="welcome-message"></h1>
-                <p>Aqui está o resumo do seu dia.</p>
-            </header>
-            <div class="cards-container">
-                <div class="dashboard-card" data-modal-target="faltas-modal">
-                    <div class="card-header"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span><span class="card-title">Faltas no Bimestre</span></div>
-                    <div class="card-data" id="faltas-count">0</div>
-                </div>
-                <div class="dashboard-card" data-modal-target="tarefas-modal">
-                    <div class="card-header"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 3.5 18 2l-1.5 1.5L15 2l-1.5 1.5L12 2l-1.5 1.5L9 2 7.5 3.5 6 2v14H3v3c0 1.66 1.34 3 3 3h12c1.66 0 3-1.34 3-3V2l-1.5 1.5zM15 20H6c-.55 0-1-.45-1-1v-1h10v2zm0-4H5V5.91l.91-.91.91.91.91-.91.91.91.91-.91.91.91.91-.91L15 5.91V16zm2-11.5-1.5-1.5-1.5 1.5L15 5l-1.5 1.5L12 5l-1.5 1.5L9 5l-1.5 1.5L6 5l-1.5 1.5L3 5V3h14v1.5z"/></svg></span><span class="card-title">Tarefas Pendentes</span></div>
-                    <div class="card-data" id="tarefas-count">0</div>
-                </div>
-                <div class="dashboard-card" data-modal-target="conquistas-modal">
-                    <div class="card-header"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="card-title">Conquistas</span></div>
-                    <div class="card-data" id="conquistas-count">0</div>
-                </div>
-                <div class="dashboard-card" data-modal-target="notificacoes-modal">
-                    <div class="card-header"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></span><span class="card-title">Notificações</span></div>
-                    <div class="card-data" id="notificacoes-count">0</div>
-                </div>
+        <div id="results-area" class="hidden">
+            <h1 id="welcome-message"></h1>
+            <div id="results-container">
+                <h2>Dados Completos Recebidos do Servidor:</h2>
+                <pre id="json-output"></pre>
             </div>
-        </main>
-    </div>
-    
-    <div id="faltas-modal" class="modal-overlay">
-        <div class="modal-content"><button class="modal-close">&times;</button><h2>Faltas do Bimestre</h2><ul class="modal-list" id="faltas-list"></ul></div>
-    </div>
-    <div id="tarefas-modal" class="modal-overlay">
-        <div class="modal-content"><button class="modal-close">&times;</button><h2>Tarefas Pendentes</h2><ul class="modal-list" id="tarefas-list"></ul></div>
-    </div>
-    <div id="conquistas-modal" class="modal-overlay">
-        <div class="modal-content"><button class="modal-close">&times;</button><h2>Minhas Conquistas</h2><ul class="modal-list" id="conquistas-list"></ul></div>
-    </div>
-    <div id="notificacoes-modal" class="modal-overlay">
-        <div class="modal-content"><button class="modal-close">&times;</button><h2>Notificações</h2><ul class="modal-list" id="notificacoes-list"></ul></div>
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const loginScreen = document.getElementById('login-screen');
-            const dashboardScreen = document.getElementById('dashboard-screen');
+            const loginArea = document.getElementById('login-area');
+            const resultsArea = document.getElementById('results-area');
             const loginForm = document.getElementById('login-form');
             const loginButton = document.getElementById('login-button');
             const loginMessage = document.getElementById('login-message');
-
-            let fullData = {};
 
             loginForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 loginButton.disabled = true;
                 loginMessage.style.color = 'var(--text-secondary)';
-                loginMessage.textContent = '✨ Autenticando e buscando dados...';
-                
+                loginMessage.textContent = 'Buscando dados...';
+
                 try {
                     const response = await fetch('/api/login', {
                         method: 'POST',
@@ -203,90 +104,25 @@
                         body: JSON.stringify({ user: document.getElementById('ra').value, senha: document.getElementById('senha').value }),
                     });
                     const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || 'Erro desconhecido.');
-                    fullData = data;
-                    showDashboard();
+                    if (!response.ok) throw new Error(data.error);
+
+                    // Se deu tudo certo, exibe os resultados
+                    loginArea.classList.add('hidden');
+                    resultsArea.classList.remove('hidden');
+                    
+                    const userName = data.userInfo?.nome || 'Aluno(a)';
+                    document.getElementById('welcome-message').textContent = `Dados para: ${userName}`;
+                    document.getElementById('json-output').textContent = JSON.stringify(data, null, 2);
+
                 } catch (error) {
                     loginMessage.style.color = 'var(--accent-red)';
-                    loginMessage.textContent = `❌ ${error.message}`;
+                    loginMessage.textContent = `Erro: ${error.message}`;
                 } finally {
                     loginButton.disabled = false;
                 }
             });
-
-            function showDashboard() {
-                populateDashboard();
-                setupEventListeners();
-                loginScreen.classList.add('fade-out');
-                setTimeout(() => {
-                    loginScreen.classList.add('hidden');
-                    dashboardScreen.classList.remove('hidden');
-                    dashboardScreen.classList.add('fade-in');
-                }, 500);
-            }
-
-            function populateDashboard() {
-                const userName = fullData.userInfo?.nome || 'Aluno(a)';
-                const firstName = userName.split(' ')[0];
-                const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-                document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${formattedName}!`;
-
-                document.getElementById('faltas-count').textContent = fullData.faltas?.length || 0;
-                document.getElementById('tarefas-count').textContent = fullData.tarefas?.length || 0;
-                document.getElementById('conquistas-count').textContent = fullData.conquistas?.length || 0;
-                document.getElementById('notificacoes-count').textContent = fullData.notificacoes?.length || 0;
-            }
-
-            function setupEventListeners() {
-                document.querySelectorAll('.dashboard-card').forEach(card => card.addEventListener('click', () => showModal(card.dataset.modalTarget)));
-                document.querySelectorAll('.modal-overlay').forEach(modal => modal.addEventListener('click', (e) => e.target === modal && hideModal(modal.id)));
-                document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => hideModal(btn.closest('.modal-overlay').id)));
-            }
-
-            function showModal(modalId) {
-                const modal = document.getElementById(modalId);
-                if (!modal) return;
-
-                const list = modal.querySelector('.modal-list');
-                let content = '<li>Nenhuma informação encontrada.</li>';
-
-                try {
-                    switch(modalId) {
-                        case 'faltas-modal':
-                            if (fullData.faltas && fullData.faltas.length > 0) {
-                                content = fullData.faltas.map(falta => `<li class="list-item"><h3>${falta.disciplina || 'Disciplina não informada'}</h3><p>Total de Faltas: ${falta.numeroFaltas || 'N/A'}</p></li>`).join('');
-                            }
-                            break;
-                        case 'tarefas-modal':
-                            if (fullData.tarefas && fullData.tarefas.length > 0) {
-                                content = fullData.tarefas.map(tarefa => `<li class="list-item"><h3>${tarefa.title || 'Tarefa sem título'}</h3><p>${tarefa.description || 'Sem descrição.'}</p></li>`).join('');
-                            }
-                            break;
-                        case 'conquistas-modal':
-                            if (fullData.conquistas && fullData.conquistas.length > 0) {
-                                content = fullData.conquistas.map(conquista => `<li class="list-item"><h3>${conquista.nome || 'Conquista sem nome'}</h3><p>${conquista.descricao || 'Sem descrição.'}</p></li>`).join('');
-                            }
-                            break;
-                        case 'notificacoes-modal':
-                            if (fullData.notificacoes && fullData.notificacoes.length > 0) {
-                                content = fullData.notificacoes.map(notif => `<li class="list-item"><h3>${notif.titulo || 'Notificação sem título'}</h3><p>${notif.mensagem || 'Sem conteúdo.'}</p></li>`).join('');
-                            }
-                            break;
-                    }
-                } catch(e) {
-                    console.error("Erro ao popular modal:", e);
-                    content = '<li>Ocorreu um erro ao carregar os detalhes.</li>';
-                }
-
-                list.innerHTML = content;
-                modal.classList.add('is-visible');
-            }
-
-            function hideModal(modalId) {
-                const modal = document.getElementById(modalId);
-                if (modal) modal.classList.remove('is-visible');
-            }
         });
     </script>
 </body>
 </html>
+
