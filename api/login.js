@@ -90,12 +90,12 @@ module.exports = async (req, res) => {
 
         const [faltas, tarefas, conquistas, notificacoes] = await Promise.all(requests);
 
-        // A CORREÇÃO ESTÁ AQUI: Passando o objeto userInfo completo
+        // Enviando o objeto userInfo completo para o frontend
         const dashboardData = {
-            userInfo: userInfo, // Passando o objeto inteiro
-            faltas: faltas?.data || [], // A API de faltas tem os dados dentro de 'data'
+            userInfo: userInfo, 
+            faltas: faltas?.data || [],
             tarefas: tarefas || [],
-            conquistas: conquistas?.data || [], // A API de conquistas tem os dados dentro de 'data'
+            conquistas: conquistas?.data || [],
             notificacoes: notificacoes || []
         };
 
