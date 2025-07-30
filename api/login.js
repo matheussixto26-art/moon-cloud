@@ -5,7 +5,6 @@ async function fetchApiData(requestConfig) {
         const response = await axios(requestConfig);
         return response.data;
     } catch (error) {
-        // Log detalhado para a falha específica
         const errorDetails = error.response ? JSON.stringify(error.response.data) : error.message;
         console.error(`Falha ao buscar dados de: ${requestConfig.url}. Detalhes: ${errorDetails}`);
         return null;
@@ -47,10 +46,10 @@ module.exports = async (req, res) => {
         const tokenB = exchangeResponse.data.auth_token;
 
         if (!tokenB) {
-            return res.status(500).json({ error: 'Falha ao obter o token secundário (auth_token).' });
+            return res.status(500).json({ error: 'Falha ao obter o token secundário.' });
         }
         
-        // ETAPA 3: Buscar os "alvos de publicação" (NECESSÁRIO PARA AS TAREFAS)
+        // ETAPA 3: Buscar alvos de publicação
         const roomUserData = await fetchApiData({
             method: 'get',
             url: 'https://edusp-api.ip.tv/room/user?list_all=true&with_cards=true',
@@ -72,7 +71,6 @@ module.exports = async (req, res) => {
                 url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
-            // A requisição de tarefas agora inclui os "alvos" que buscamos
             fetchApiData({
                 method: 'get',
                 url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&filter_expired=true&is_exam=false&with_answer=true&${publicationTargetsQuery}`,
@@ -92,18 +90,21 @@ module.exports = async (req, res) => {
 
         const [faltas, tarefas, conquistas, notificacoes] = await Promise.all(requests);
 
+        // A CORREÇÃO ESTÁ AQUI: Passando o objeto userInfo completo
         const dashboardData = {
-            userInfo: { nome: userInfo.NOME },
-            faltas: faltas || [],
+            userInfo: userInfo, // Passando o objeto inteiro
+            faltas: faltas?.data || [], // A API de faltas tem os dados dentro de 'data'
             tarefas: tarefas || [],
-            conquistas: conquistas || [],
+            conquistas: conquistas?.data || [], // A API de conquistas tem os dados dentro de 'data'
             notificacoes: notificacoes || []
         };
 
         res.status(200).json(dashboardData);
 
     } catch (error) {
+        const errorMessage = error.response?.data?.statusRetorno || 'RA ou Senha inválidos, ou falha em uma das APIs críticas.';
         console.error('ERRO GERAL NO PROCESSO:', error.response ? error.response.data : error.message);
-        return res.status(error.response?.status || 500).json({ error: 'RA ou Senha inválidos, ou falha em uma das APIs críticas.' });
+        return res.status(error.response?.status || 500).json({ error: errorMessage });
     }
 };
+
