@@ -54,7 +54,7 @@
         <main class="main-content">
             <header class="main-header"><h1 id="welcome-message"></h1><p id="school-name"></p></header>
             <div class="cards-container">
-                <div class="dashboard-card" data-modal-target="faltas-modal"><div class="card-header"><span class="card-title">Faltas Totais (Ano)</span></div><div class="card-data" id="faltas-count">0</div></div>
+                <div class="dashboard-card" data-modal-target="faltas-modal"><div class="card-header"><span class="card-title">Faltas no Bimestre</span></div><div class="card-data" id="faltas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="tarefas-modal"><div class="card-header"><span class="card-title">Tarefas Pendentes</span></div><div class="card-data" id="tarefas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="conquistas-modal"><div class="card-header"><span class="card-title">Conquistas</span></div><div class="card-data" id="conquistas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="notificacoes-modal"><div class="card-header"><span class="card-title">Notificações</span></div><div class="card-data" id="notificacoes-count">0</div></div>
@@ -62,7 +62,7 @@
         </main>
     </div>
     
-    <div id="faltas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Faltas por Disciplina (Ano Letivo)</h2><ul class="modal-list" id="faltas-list"></ul></div></div>
+    <div id="faltas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Faltas por Disciplina</h2><ul class="modal-list" id="faltas-list"></ul></div></div>
     <div id="tarefas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Tarefas Pendentes</h2><ul class="modal-list" id="tarefas-list"></ul></div></div>
     <div id="conquistas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Minhas Conquistas</h2><ul class="modal-list" id="conquistas-list"></ul></div></div>
     <div id="notificacoes-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Notificações</h2><ul class="modal-list" id="notificacoes-list"></ul></div></div>
@@ -114,9 +114,7 @@
                 document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${firstName}!`;
                 document.getElementById('school-name').textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
                 
-                const totalFaltas = fullData.faltas.reduce((total, disciplina) => total + (disciplina.totalFaltas || 0), 0);
-                document.getElementById('faltas-count').textContent = totalFaltas;
-                
+                document.getElementById('faltas-count').textContent = fullData.faltas?.length || 0;
                 document.getElementById('tarefas-count').textContent = fullData.tarefas?.length || 0;
                 document.getElementById('conquistas-count').textContent = fullData.conquistas?.length || 0;
                 document.getElementById('notificacoes-count').textContent = fullData.notificacoes?.length || 0;
@@ -136,14 +134,10 @@
                 try {
                     switch(modalId) {
                         case 'faltas-modal':
-                            if (fullData.faltas?.length > 0) {
-                                content = fullData.faltas.map(item => `<li class="list-item"><h3>${item.nomeDisciplina}</h3><p>Total de Faltas no Ano: ${item.totalFaltas}</p></li>`).join('');
-                            }
+                            if (fullData.faltas?.length > 0) content = fullData.faltas.map(item => `<li class="list-item"><h3>${item.disciplina}</h3><p>Total de Faltas: ${item.numeroFaltas}</p></li>`).join('');
                             break;
                         case 'tarefas-modal':
-                            if (fullData.tarefas?.length > 0) {
-                                content = fullData.tarefas.map(item => `<li class="list-item"><h3>${item.title}</h3><p>Status: ${item.answer?.status || 'Pendente'}</p><small>ID: ${item.id}</small></li>`).join('');
-                            }
+                            if (fullData.tarefas?.length > 0) content = fullData.tarefas.map(item => `<li class="list-item"><h3>${item.title}</h3><p>${item.answer?.status || 'Pendente'}</p><small>ID: ${item.id}</small></li>`).join('');
                             break;
                         case 'conquistas-modal':
                             if (fullData.conquistas?.length > 0) content = fullData.conquistas.map(item => `<li class="list-item"><h3>${item.projeto}</h3><p>Medalha: ${item.medalha}</p></li>`).join('');
@@ -164,5 +158,4 @@
         });
     </script>
 </body>
-    </html>
-    
+</html>
