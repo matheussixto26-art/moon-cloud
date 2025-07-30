@@ -79,16 +79,29 @@
             loginForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 loginButton.disabled = true;
-                loginMessage.textContent = '✨ Buscando dados...';
+                loginMessage.textContent = '✨ Buscando dados... (Etapa 1/2)';
                 try {
-                    const response = await fetch('/api/login', {
+                    // ETAPA 1: LOGIN E DADOS INICIAIS
+                    const initialResponse = await fetch('/api/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ user: document.getElementById('ra').value, senha: document.getElementById('senha').value }),
                     });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error);
-                    fullData = data;
+                    const initialData = await initialResponse.json();
+                    if (!initialResponse.ok) throw new Error(initialData.error);
+                    fullData = initialData;
+
+                    // ETAPA 2: BUSCAR TAREFAS
+                    loginMessage.textContent = '✨ Buscando tarefas... (Etapa 2/2)';
+                    const tasksResponse = await fetch('/api/tasks', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: fullData.auth_token, targets: fullData.targets }),
+                    });
+                    const tasksData = await tasksResponse.json();
+                    if (!tasksResponse.ok) throw new Error(tasksData.error);
+                    fullData.tarefas = tasksData; // Adiciona as tarefas aos dados completos
+
                     showDashboard();
                 } catch (error) {
                     loginMessage.textContent = `❌ ${error.message}`;
