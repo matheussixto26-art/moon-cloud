@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: 'Falha ao obter o token secundário.' });
         }
         
-        // ETAPA 3: Buscar alvos de publicação
+        // ETAPA 3: Buscar os "alvos de publicação" (CRUCIAL PARA AS TAREFAS)
         const roomUserData = await fetchApiData({
             method: 'get',
             url: 'https://edusp-api.ip.tv/room/user?list_all=true&with_cards=true',
@@ -71,6 +71,7 @@ module.exports = async (req, res) => {
                 url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
+            // A requisição de tarefas agora inclui os "alvos" que buscamos
             fetchApiData({
                 method: 'get',
                 url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&filter_expired=true&is_exam=false&with_answer=true&${publicationTargetsQuery}`,
@@ -90,11 +91,10 @@ module.exports = async (req, res) => {
 
         const [faltas, tarefas, conquistas, notificacoes] = await Promise.all(requests);
 
-        // Enviando o objeto userInfo completo para o frontend
         const dashboardData = {
-            userInfo: userInfo, 
+            userInfo: userInfo,
             faltas: faltas?.data || [],
-            tarefas: tarefas || [],
+            tarefas: tarefas || [], // A API de tarefas retorna a lista diretamente
             conquistas: conquistas?.data || [],
             notificacoes: notificacoes || []
         };
@@ -107,4 +107,3 @@ module.exports = async (req, res) => {
         return res.status(error.response?.status || 500).json({ error: errorMessage });
     }
 };
-
