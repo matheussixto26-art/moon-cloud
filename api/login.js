@@ -22,7 +22,6 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // ETAPA 1: Login Principal
         const loginResponse = await axios.post(
             "https://sedintegracoes.educacao.sp.gov.br/credenciais/api/LoginCompletoToken",
             { user, senha },
@@ -36,7 +35,6 @@ module.exports = async (req, res) => {
             return res.status(401).json({ error: 'Credenciais inválidas.' });
         }
 
-        // ETAPA 2: Troca de Token
         const exchangeResponse = await axios.post(
             "https://edusp-api.ip.tv/registration/edusp/token",
             { token: tokenA },
@@ -49,7 +47,6 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: 'Falha ao obter o token secundário.' });
         }
         
-        // ETAPA 3: Buscar os "alvos de publicação" (CRUCIAL PARA AS TAREFAS)
         const roomUserData = await fetchApiData({
             method: 'get',
             url: 'https://edusp-api.ip.tv/room/user?list_all=true&with_cards=true',
@@ -62,19 +59,18 @@ module.exports = async (req, res) => {
             publicationTargetsQuery = targets.join('&');
         }
 
-        // ETAPA 4: Buscar os dados restantes em paralelo
         const codigoAluno = userInfo.CD_USUARIO;
+        const [raNumber, raDigit, raUf] = user.match(/^(\d+)(\d)(\w+)$/).slice(1);
 
         const requests = [
-             fetchApiData({
+             fetchApiData({ // FALTAS ANUAIS (MAIS PRECISO)
                 method: 'get',
-                url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
+                url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFrequenciaAluno?anoLetivo=${new Date().getFullYear()}&codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
-            // A requisição de tarefas agora inclui os "alvos" que buscamos
-            fetchApiData({
+            fetchApiData({ // TAREFAS (INCLUINDO EXPIRADAS)
                 method: 'get',
-                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&filter_expired=true&is_exam=false&with_answer=true&${publicationTargetsQuery}`,
+                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=true&limit=100&filter_expired=false&with_answer=true&${publicationTargetsQuery}`,
                 headers: { "x-api-key": tokenB }
             }),
             fetchApiData({
@@ -86,15 +82,24 @@ module.exports = async (req, res) => {
                 method: 'get',
                 url: `https://sedintegracoes.educacao.sp.gov.br/cmspwebservice/api/sala-do-futuro-alunos/consulta-notificacao?userId=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "1a758fd2f6be41448079c9616a861b91" }
+            }),
+            fetchApiData({
+                method: 'get',
+                url: `https://sedintegracoes.educacao.sp.gov.br/alunoapi/api/Aluno/ExibirAluno?inNumRA=${raNumber}&inDigitoRA=${raDigit}&inSiglaUFRA=${raUf}`,
+                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "b141f65a88354e078a9d4fdb1df29867" }
             })
         ];
 
-        const [faltas, tarefas, conquistas, notificacoes] = await Promise.all(requests);
+        const [faltasData, tarefas, conquistas, notificacoes, dadosEscola] = await Promise.all(requests);
+        
+        if(dadosEscola && dadosEscola.aluno) {
+            userInfo.NOME_ESCOLA = dadosEscola.aluno.nmEscola;
+        }
 
         const dashboardData = {
             userInfo: userInfo,
-            faltas: faltas?.data || [],
-            tarefas: tarefas || [], // A API de tarefas retorna a lista diretamente
+            faltas: faltasData?.data?.disciplinas || [],
+            tarefas: tarefas || [],
             conquistas: conquistas?.data || [],
             notificacoes: notificacoes || []
         };
@@ -107,3 +112,4 @@ module.exports = async (req, res) => {
         return res.status(error.response?.status || 500).json({ error: errorMessage });
     }
 };
+                
