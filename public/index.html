@@ -38,6 +38,7 @@
         .list-item:hover { background-color: var(--border-color); }
         .list-item h3 { font-size: 1.1em; margin-bottom: 5px; }
         .list-item p { font-size: 0.9em; color: var(--text-secondary); }
+        .list-item small { font-size: 0.8em; color: var(--accent-color); opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -54,7 +55,7 @@
             <header class="main-header"><h1 id="welcome-message"></h1><p id="school-name"></p></header>
             <div class="cards-container">
                 <div class="dashboard-card" data-modal-target="faltas-modal"><div class="card-header"><span class="card-title">Faltas no Bimestre</span></div><div class="card-data" id="faltas-count">0</div></div>
-                <div class="dashboard-card" data-modal-target="tarefas-modal"><div class="card-header"><span class="card-title">Tarefas (Todas)</span></div><div class="card-data" id="tarefas-count">0</div></div>
+                <div class="dashboard-card" data-modal-target="tarefas-modal"><div class="card-header"><span class="card-title">Tarefas Pendentes</span></div><div class="card-data" id="tarefas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="conquistas-modal"><div class="card-header"><span class="card-title">Conquistas</span></div><div class="card-data" id="conquistas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="notificacoes-modal"><div class="card-header"><span class="card-title">Notificações</span></div><div class="card-data" id="notificacoes-count">0</div></div>
             </div>
@@ -108,7 +109,8 @@
             }
 
             function populateDashboard() {
-                const userName = fullData.userInfo?.NOME || 'Aluno(a)';
+                // CORREÇÃO FINAL: Checando por NOME ou NAME
+                const userName = fullData.userInfo?.NOME || fullData.userInfo?.NAME || 'Aluno(a)';
                 const firstName = userName.split(' ')[0];
                 document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${firstName}!`;
                 document.getElementById('school-name').textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
@@ -136,7 +138,7 @@
                             if (fullData.faltas?.length > 0) content = fullData.faltas.map(item => `<li class="list-item"><h3>${item.disciplina}</h3><p>Total de Faltas: ${item.numeroFaltas}</p></li>`).join('');
                             break;
                         case 'tarefas-modal':
-                            if (fullData.tarefas?.length > 0) content = fullData.tarefas.map(item => `<li class="list-item"><h3>${item.title}</h3><p>${item.status === 'expired' ? 'Expirada' : 'Pendente'}</p></li>`).join('');
+                            if (fullData.tarefas?.length > 0) content = fullData.tarefas.map(item => `<li class="list-item"><h3>${item.title}</h3><p>${item.status === 'expired' ? 'Expirada' : 'Pendente'}</p><small>ID: ${item.id}</small></li>`).join('');
                             break;
                         case 'conquistas-modal':
                             if (fullData.conquistas?.length > 0) content = fullData.conquistas.map(item => `<li class="list-item"><h3>${item.projeto}</h3><p>Medalha: ${item.medalha}</p></li>`).join('');
