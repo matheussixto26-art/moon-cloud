@@ -56,7 +56,7 @@
         <main class="main-content">
             <header class="main-header"><h1 id="welcome-message"></h1><p id="school-name"></p></header>
             <div class="cards-container">
-                <div class="dashboard-card" data-modal-target="faltas-modal"><div class="card-header"><span class="card-title">Faltas Totais</span></div><div class="card-data" id="faltas-count">0</div></div>
+                <div class="dashboard-card" data-modal-target="faltas-modal"><div class="card-header"><span class="card-title">Faltas no Bimestre</span></div><div class="card-data" id="faltas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="tarefas-modal"><div class="card-header"><span class="card-title">Tarefas (Todas)</span></div><div class="card-data" id="tarefas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="conquistas-modal"><div class="card-header"><span class="card-title">Conquistas</span></div><div class="card-data" id="conquistas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="notificacoes-modal"><div class="card-header"><span class="card-title">Notificações</span></div><div class="card-data" id="notificacoes-count">0</div></div>
@@ -112,12 +112,13 @@
             }
 
             function populateDashboard() {
+                // CORREÇÃO FINAL: Usando a chave 'NOME' (maiúscula)
                 const userName = fullData.userInfo?.NOME || 'Aluno(a)';
                 const firstName = userName.split(' ')[0];
                 document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${firstName}!`;
                 document.getElementById('school-name').textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
-                const totalFaltas = fullData.faltas.reduce((total, disciplina) => total + (disciplina.totalFaltas || 0), 0);
-                document.getElementById('faltas-count').textContent = totalFaltas;
+                
+                document.getElementById('faltas-count').textContent = fullData.faltas?.length || 0;
                 document.getElementById('tarefas-count').textContent = fullData.tarefas?.length || 0;
                 document.getElementById('conquistas-count').textContent = fullData.conquistas?.length || 0;
                 document.getElementById('notificacoes-count').textContent = fullData.notificacoes?.length || 0;
@@ -137,7 +138,7 @@
                 try {
                     switch(modalId) {
                         case 'faltas-modal':
-                            if (fullData.faltas?.length > 0) content = fullData.faltas.map(item => `<li class="list-item"><h3>${item.nomeDisciplina}</h3><p>Total de Faltas: ${item.totalFaltas}</p></li>`).join('');
+                            if (fullData.faltas?.length > 0) content = fullData.faltas.map(item => `<li class="list-item"><h3>${item.disciplina}</h3><p>Total de Faltas: ${item.numeroFaltas}</p></li>`).join('');
                             break;
                         case 'tarefas-modal':
                             if (fullData.tarefas?.length > 0) content = fullData.tarefas.map(item => `<li class="list-item" onclick="openTaskViewer(${item.id}, '${item.publication_target}')"><h3>${item.title}</h3><p>${item.status === 'expired' ? 'Expirada' : 'Pendente'}</p></li>`).join('');
@@ -221,7 +222,7 @@
 
                 document.getElementById('submit-task-button').disabled = true;
                 try {
-                     const response = await fetch('/api/task', {
+                     await fetch('/api/task', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ type: 'submit', taskId, room, token: fullData.auth_token, answers }),
