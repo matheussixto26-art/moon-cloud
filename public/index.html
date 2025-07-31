@@ -3,50 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoonFuturo</title>
+    <title>Bests.IA</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg-dark:#0d1117; --bg-medium:#161b22; --border-color:#30363d; --text-primary:#c9d1d9; --text-secondary:#8b949e; --accent-color:#238636; }
+        :root { --bg-dark:#0d1117; --bg-medium:#161b22; --border-color:#30363d; --text-primary:#c9d1d9; --text-secondary:#8b949e; --accent-color:#388bfd; --accent-color-hover:#58a6ff; --accent-red:#da3633; --accent-green:#238636; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: var(--bg-dark); color: var(--text-primary); font-family: 'Poppins', sans-serif; overflow: hidden; }
         .hidden { display: none !important; }
         #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .login-container { background-color: var(--bg-medium); padding: 40px; border-radius: 10px; width: 100%; max-width: 400px; text-align: center; }
-        h1 { margin-bottom: 30px; }
-        .input-group { margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-dark); color: var(--text-primary); }
-        button { width: 100%; padding: 15px; border: none; border-radius: 6px; background-color: var(--accent-color); color: white; font-weight: 600; cursor: pointer; }
-        #login-message { margin-top: 20px; min-height: 20px; color: #da3633; }
-        #dashboard-screen { display: flex; height: 100vh; }
-        .sidebar { width: 250px; background-color: var(--bg-medium); padding: 25px; }
-        .main-content { flex-grow: 1; padding: 25px; overflow-y: auto; }
+        .login-container { background-color: var(--bg-medium); padding: 40px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
+        h1, h2 { color: #fff; }
+        .login-container h1 { margin-bottom: 30px; }
+        .input-group input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-dark); color: var(--text-primary); }
+        .login-container button { width: 100%; padding: 15px; border: none; border-radius: 6px; background-color: var(--accent-color); color: white; font-weight: 600; cursor: pointer; }
+        #login-message { margin-top: 20px; min-height: 20px; color: var(--accent-red); }
+        #dashboard-screen { display: flex; height: 100vh; flex-direction: column; }
+        .main-content { flex-grow: 1; padding: 20px; overflow-y: auto; }
+        .main-header { padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
         .main-header p { color: var(--text-secondary); }
-        .cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; padding-top: 25px; }
+        .cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding-top: 20px; }
         .dashboard-card { background-color: var(--bg-medium); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; cursor: pointer; }
-        .card-data { font-size: 2.8em; font-weight: 700; }
+        .dashboard-card:hover { border-color: var(--accent-color); }
+        .card-title { font-size: 1em; color: var(--text-secondary); }
+        .card-data { font-size: 2.5em; font-weight: 700; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; }
         .modal-overlay.is-visible { opacity: 1; pointer-events: all; }
-        .modal-content { background-color: var(--bg-medium); padding: 30px; border-radius: 8px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; }
+        .modal-content { background-color: var(--bg-medium); padding: 20px; border-radius: 8px; width: 95%; max-width: 700px; max-height: 85vh; overflow-y: auto; }
         .modal-close { float: right; background: none; border: none; color: var(--text-primary); font-size: 1.5em; cursor: pointer; }
-        .modal-list .list-item, .boletim-grid .disciplina-card { list-style: none; padding: 15px; border-bottom: 1px solid var(--border-color); }
-        .boletim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 1.5rem; }
-        .disciplina-card h3 { font-size: 1.1em; }
+        .modal-list .list-item { list-style: none; padding: 15px; border-bottom: 1px solid var(--border-color); }
+        .list-item:hover { background-color: var(--border-color); }
+        .list-item h3 { margin-bottom: 5px; }
+        .list-item p { color: var(--text-secondary); }
+        .boletim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
     </style>
 </head>
 <body>
     <div id="login-screen">
-        <div class="login-container">
-            <h1>MoonFuturo</h1>
-            <form id="login-form">
-                <div class="input-group"><input type="text" id="ra" placeholder="RA com dígito e UF" required></div>
-                <div class="input-group"><input type="password" id="senha" placeholder="Senha da SED" required></div>
-                <button type="submit" id="login-button">Entrar</button>
-            </form>
-            <div id="login-message"></div>
-        </div>
+        <div class="login-container"><h1>Bests.IA</h1><form id="login-form"><div class="input-group"><input type="text" id="ra" placeholder="RA com dígito e UF" required></div><div class="input-group"><input type="password" id="senha" placeholder="Senha da SED" required></div><button type="submit" id="login-button">Entrar</button></form><div id="login-message"></div></div>
     </div>
     <div id="dashboard-screen" class="hidden">
-        <aside class="sidebar"><h2>MoonFuturo</h2></aside>
         <main class="main-content">
             <header class="main-header"><h1 id="welcome-message"></h1><p id="school-name"></p></header>
             <div class="cards-container">
@@ -55,15 +50,17 @@
                 <div class="dashboard-card" data-modal-target="conquistas-modal"><div>Conquistas</div><div class="card-data" id="conquistas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="notificacoes-modal"><div>Notificações</div><div class="card-data" id="notificacoes-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="boletim-modal"><div>Boletim</div><div class="card-data">Ver</div></div>
+                <div class="dashboard-card" data-modal-target="medalhas-modal"><div>Medalhas Semanais</div><div class="card-data" id="medalhas-count">0</div></div>
             </div>
         </main>
     </div>
     
-    <div id="faltas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Faltas por Disciplina</h2><ul class="modal-list" id="faltas-list"></ul></div></div>
-    <div id="tarefas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Tarefas Pendentes</h2><ul class="modal-list" id="tarefas-list"></ul></div></div>
-    <div id="conquistas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Minhas Conquistas</h2><ul class="modal-list" id="conquistas-list"></ul></div></div>
+    <div id="faltas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Faltas</h2><ul class="modal-list" id="faltas-list"></ul></div></div>
+    <div id="tarefas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Tarefas</h2><ul class="modal-list" id="tarefas-list"></ul></div></div>
+    <div id="conquistas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Conquistas</h2><ul class="modal-list" id="conquistas-list"></ul></div></div>
     <div id="notificacoes-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Notificações</h2><ul class="modal-list" id="notificacoes-list"></ul></div></div>
-    <div id="boletim-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Boletim (1º Bimestre)</h2><div class="boletim-grid" id="boletim-grid"></div></div></div>
+    <div id="boletim-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Boletim</h2><div class="boletim-grid" id="boletim-grid"></div></div></div>
+    <div id="medalhas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Medalhas Semanais (Tarefa SP)</h2><ul class="modal-list" id="medalhas-list"></ul></div></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -112,6 +109,7 @@
                 document.getElementById('tarefas-count').textContent = fullData.tarefas?.length || 0;
                 document.getElementById('conquistas-count').textContent = fullData.conquistas?.length || 0;
                 document.getElementById('notificacoes-count').textContent = fullData.notificacoes?.length || 0;
+                document.getElementById('medalhas-count').textContent = fullData.medalhasSemanais?.length || 0;
             }
 
             function setupEventListeners() {
@@ -121,15 +119,15 @@
             }
 
             function showModal(modalId) {
+                if (!modalId) return;
                 const modal = document.getElementById(modalId);
-                if (!modal) return;
-                let content = '<p>Nenhuma informação encontrada.</p>';
+                let content = '<p style="padding: 15px;">Nenhuma informação encontrada.</p>';
                 
                 try {
-                    if (modalId === 'boletim-modal') {
+                     if (modalId === 'boletim-modal') {
                         const grid = document.getElementById('boletim-grid');
                         if (fullData.boletim?.length > 0) {
-                            content = fullData.boletim.map(d => `<div class="disciplina-card"><h3>${d.descricaoDisciplina}</h3><p>Nota: ${d.notaBimestre1 || '-'}</p></div>`).join('');
+                            content = fullData.boletim.map(d => `<div class="list-item"><h3>${d.descricaoDisciplina}</h3><p>Nota: ${d.notaBimestre1 || '-'}</p></div>`).join('');
                         }
                         grid.innerHTML = content;
                     } else {
@@ -139,7 +137,7 @@
                                 if (fullData.faltas?.length > 0) content = fullData.faltas.map(item => `<li class="list-item"><h3>${item.disciplina}</h3><p>Faltas: ${item.numeroFaltas}</p></li>`).join('');
                                 break;
                             case 'tarefas-modal':
-                                if (fullData.tarefas?.length > 0) content = fullData.tarefas.map(item => `<li class="list-item"><h3>${item.title}</h3><p>Status: ${item.answer?.status || 'Pendente'}</p></li>`).join('');
+                                if (fullData.tarefas?.length > 0) content = fullData.tarefas.map(item => `<li class="list-item"><h3>${item.title}</h3><p>Status: ${item.answer?.status === 'submitted' ? 'Entregue' : (item.status === 'expired' ? 'Expirada' : 'Pendente')}</p></li>`).join('');
                                 break;
                             case 'conquistas-modal':
                                 if (fullData.conquistas?.length > 0) content = fullData.conquistas.map(item => `<li class="list-item"><h3>${item.projeto}</h3><p>Medalha: ${item.medalha}</p></li>`).join('');
@@ -147,6 +145,9 @@
                             case 'notificacoes-modal':
                                 if (fullData.notificacoes?.length > 0) content = fullData.notificacoes.map(item => `<li class="list-item"><h3>${item.seesp_titulo}</h3><p>${item.seesp_mensagem}</p></li>`).join('');
                                 break;
+                             case 'medalhas-modal':
+                                 if (fullData.medalhasSemanais?.length > 0) content = fullData.medalhasSemanais.map(item => `<li class="list-item"><h3>${item.goal.name}</h3><p>Progresso: ${item.progress} / ${item.goal.target_value}</p></li>`).join('');
+                                 break;
                         }
                         list.innerHTML = content;
                     }
@@ -161,5 +162,5 @@
         });
     </script>
 </body>
-                                                                                                                                                                                                           </html>
-                                                                                                                                                                                                           
+                                                                                  </html>
+                                                                                  
