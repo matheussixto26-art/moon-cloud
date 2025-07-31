@@ -10,8 +10,7 @@ const getEduspHeaders = (token) => ({
 
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(405).end();
-    res.setHeader('Access-Control-Allow-Origin', '*');
-
+    
     const { type, taskId, token, room, answers } = req.body;
     if (!type || !token) return res.status(400).json({ error: 'Parâmetros insuficientes.' });
     
@@ -32,7 +31,7 @@ module.exports = async (req, res) => {
         const response = await axios.post(url, payload, { headers: getEduspHeaders(token) });
         return res.status(200).json(response.data);
     } catch (error) {
-        const errorDetails = error.response ? error.response.data : error.message;
-        res.status(error.response?.status || 500).json({ error: `Falha na API de tarefa: ${type}`, details: errorDetails });
+        res.status(error.response?.status || 500).json({ error: `Falha na API de tarefa: ${type}` });
     }
 };
+
