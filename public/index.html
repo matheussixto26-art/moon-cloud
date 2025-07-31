@@ -3,154 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoonFuturo - Investigador de API</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <title>MoonFuturo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-dark: #0d1117; --bg-medium: #161b22; --border-color: #30363d;
-            --text-primary: #c9d1d9; --text-secondary: #8b949e; --accent-green: #238636;
-            --accent-blue: #388bfd; --accent-red: #da3633;
-        }
-        body { background-color: var(--bg-dark); color: var(--text-primary); font-family: 'Poppins', sans-serif; padding: 20px; }
-        .container { background-color: var(--bg-medium); padding: 40px; border-radius: 10px; border: 1px solid var(--border-color); width: 100%; max-width: 900px; margin: auto; }
-        .hidden { display: none; }
-        h1, h2 { text-align: center; margin-bottom: 20px; }
-        .input-group { text-align: left; margin-bottom: 20px; }
-        label { display: block; font-size: 0.9em; color: var(--text-secondary); margin-bottom: 5px; }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--bg-dark); color: var(--text-primary); font-family: 'Roboto Mono', monospace; font-size: 0.9em; }
-        textarea { min-height: 120px; resize: vertical; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 5px; background-color: var(--accent-green); color: white; font-weight: 600; font-size: 1em; cursor: pointer; margin-top: 10px; }
-        #login-message { margin-top: 20px; font-weight: 600; min-height: 20px; text-align: center; }
-        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        #copy-button { padding: 8px 15px; background-color: var(--accent-blue); width: auto; }
-        pre {
-            background-color: var(--bg-dark); padding: 20px; border-radius: 5px; border: 1px solid var(--border-color);
-            white-space: pre-wrap; word-wrap: break-word; font-family: 'Roboto Mono', monospace;
-            max-height: 40vh; overflow-y: auto;
-        }
+        :root { --bg-dark:#0d1117; --bg-medium:#161b22; --border-color:#30363d; --text-primary:#c9d1d9; --text-secondary:#8b949e; --accent-color:#238636; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--bg-dark); color: var(--text-primary); font-family: 'Poppins', sans-serif; overflow: hidden; }
+        .hidden { display: none !important; }
+        #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-container { background-color: var(--bg-medium); padding: 40px; border-radius: 10px; width: 100%; max-width: 400px; text-align: center; }
+        h1 { margin-bottom: 30px; }
+        .input-group { margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-dark); color: var(--text-primary); }
+        button { width: 100%; padding: 15px; border: none; border-radius: 6px; background-color: var(--accent-color); color: white; font-weight: 600; cursor: pointer; }
+        #login-message { margin-top: 20px; min-height: 20px; color: #da3633; }
+        #dashboard-screen { display: flex; height: 100vh; }
+        .sidebar { width: 250px; background-color: var(--bg-medium); padding: 25px; }
+        .main-content { flex-grow: 1; padding: 25px; overflow-y: auto; }
+        .main-header p { color: var(--text-secondary); }
+        .cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; padding-top: 25px; }
+        .dashboard-card { background-color: var(--bg-medium); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; cursor: pointer; }
+        .card-data { font-size: 2.8em; font-weight: 700; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; }
+        .modal-overlay.is-visible { opacity: 1; pointer-events: all; }
+        .modal-content { background-color: var(--bg-medium); padding: 30px; border-radius: 8px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; }
+        .modal-close { float: right; background: none; border: none; color: var(--text-primary); font-size: 1.5em; cursor: pointer; }
+        .boletim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 1.5rem; }
+        .disciplina-card { background-color: var(--bg-dark); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .disciplina-card h3 { font-size: 1.1em; margin-bottom: 10px; }
+        .disciplina-card p { font-size: 0.9em; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="login-area">
-            <h1>Investigador de API</h1>
+    <div id="login-screen">
+        <div class="login-container">
+            <h1>MoonFuturo</h1>
             <form id="login-form">
-                <div class="input-group"><label for="ra">RA:</label><input type="text" id="ra" required></div>
-                <div class="input-group"><label for="senha">Senha:</label><input type="password" id="senha" required></div>
-                <button type="submit" id="login-button">Iniciar Investigação</button>
+                <div class="input-group"><input type="text" id="ra" placeholder="RA com dígito e UF" required></div>
+                <div class="input-group"><input type="password" id="senha" placeholder="Senha da SED" required></div>
+                <button type="submit" id="login-button">Entrar</button>
             </form>
             <div id="login-message"></div>
         </div>
-
-        <div id="results-area" class="hidden">
-            <h1 id="welcome-message"></h1>
-            
-            <div class="results-header">
-                <h2>[Passo 1] Resposta Completa do Login (/api/login):</h2>
-                <button id="copy-button">Copiar JSON</button>
+    </div>
+    <div id="dashboard-screen" class="hidden">
+        <aside class="sidebar"><h2>MoonFuturo</h2></aside>
+        <main class="main-content">
+            <header class="main-header"><h1 id="welcome-message"></h1><p id="school-name"></p></header>
+            <div class="cards-container">
+                <div class="dashboard-card" data-modal-target="boletim-modal"><div>Boletim</div><div class="card-data" id="boletim-status">Ver</div></div>
+                <div class="dashboard-card"><div>Tarefas Pendentes</div><div class="card-data" id="tarefas-count">0</div></div>
+                <div class="dashboard-card"><div>Conquistas</div><div class="card-data" id="conquistas-count">0</div></div>
+                <div class="dashboard-card"><div>Notificações</div><div class="card-data" id="notificacoes-count">0</div></div>
             </div>
-            <pre id="login-json-output"></pre>
-
-            <div style="margin-top: 40px;">
-                <h2 style="margin-bottom: 20px;">[Passo 2] Investigador de Tarefas (/api/tasks):</h2>
-                <div class="input-group">
-                    <label for="auth-token-input">auth_token (x-api-key):</label>
-                    <textarea id="auth-token-input"></textarea>
-                </div>
-                <div class="input-group">
-                    <label for="targets-input">Alvos (targets):</label>
-                    <textarea id="targets-input"></textarea>
-                </div>
-                <button id="fetch-tasks-button">Buscar Tarefas com estes Dados</button>
-                <h3 style="margin-top:20px;">Resposta da Busca de Tarefas:</h3>
-                <pre id="tasks-json-output">Clique no botão acima para ver o resultado.</pre>
-            </div>
+        </main>
+    </div>
+    
+    <div id="boletim-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2>Boletim Anual</h2>
+            <div class="boletim-grid" id="boletim-grid"></div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const loginArea = document.getElementById('login-area');
-            const resultsArea = document.getElementById('results-area');
+            const loginScreen = document.getElementById('login-screen');
+            const dashboardScreen = document.getElementById('dashboard-screen');
             const loginForm = document.getElementById('login-form');
             const loginButton = document.getElementById('login-button');
             const loginMessage = document.getElementById('login-message');
-            
-            const copyButton = document.getElementById('copy-button');
-            const loginJsonOutput = document.getElementById('login-json-output');
-            
-            const authTokenInput = document.getElementById('auth-token-input');
-            const targetsInput = document.getElementById('targets-input');
-            const fetchTasksButton = document.getElementById('fetch-tasks-button');
-            const tasksJsonOutput = document.getElementById('tasks-json-output');
-
-            let initialData = {};
+            let fullData = {};
 
             loginForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 loginButton.disabled = true;
-                loginMessage.textContent = 'Buscando dados iniciais...';
-
+                loginMessage.textContent = 'Buscando dados...';
                 try {
                     const response = await fetch('/api/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ user: document.getElementById('ra').value, senha: document.getElementById('senha').value }),
                     });
-                    initialData = await response.json();
-                    if (!response.ok) throw new Error(initialData.error);
-
-                    loginArea.classList.add('hidden');
-                    resultsArea.classList.remove('hidden');
-                    
-                    const userName = initialData.userInfo?.NOME || initialData.userInfo?.NAME || 'Aluno(a) (Nome não encontrado)';
-                    document.getElementById('welcome-message').textContent = `Investigação para: ${userName}`;
-                    
-                    // Preenche a Aba 1
-                    loginJsonOutput.textContent = JSON.stringify(initialData, null, 2);
-
-                    // Preenche a Aba 2
-                    authTokenInput.value = initialData.auth_token || 'Token não encontrado na resposta.';
-                    targetsInput.value = JSON.stringify(initialData.targets || 'Lista de alvos não encontrada.', null, 2);
-
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error);
+                    fullData = data;
+                    showDashboard();
                 } catch (error) {
-                    loginMessage.textContent = `Erro: ${error.message}`;
-                    loginJsonOutput.textContent = `Ocorreu um erro:\n${JSON.stringify(initialData, null, 2)}`;
+                    loginMessage.textContent = `❌ ${error.message}`;
                 } finally {
                     loginButton.disabled = false;
                 }
             });
 
-            copyButton.addEventListener('click', () => {
-                navigator.clipboard.writeText(loginJsonOutput.textContent).then(() => {
-                    copyButton.textContent = 'Copiado!';
-                    setTimeout(() => { copyButton.textContent = 'Copiar JSON'; }, 2000);
-                });
-            });
+            function showDashboard() {
+                populateDashboard();
+                setupEventListeners();
+                loginScreen.classList.add('hidden');
+                dashboardScreen.classList.remove('hidden');
+            }
 
-            fetchTasksButton.addEventListener('click', async () => {
-                fetchTasksButton.disabled = true;
-                tasksJsonOutput.textContent = 'Buscando tarefas...';
-                try {
-                    const token = authTokenInput.value;
-                    const targets = JSON.parse(targetsInput.value);
+            function populateDashboard() {
+                const userName = fullData.userInfo?.NOME_COMPLETO || 'Aluno(a)';
+                const firstName = userName.split(' ')[0];
+                document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${firstName}!`;
+                document.getElementById('school-name').textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
+                
+                document.getElementById('tarefas-count').textContent = fullData.tarefas?.length || 0;
+                document.getElementById('conquistas-count').textContent = fullData.conquistas?.length || 0;
+                document.getElementById('notificacoes-count').textContent = fullData.notificacoes?.length || 0;
+            }
 
-                    const response = await fetch('/api/tasks', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token, targets }),
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || JSON.stringify(data));
+            function setupEventListeners() {
+                document.querySelectorAll('.dashboard-card').forEach(card => card.addEventListener('click', () => showModal(card.dataset.modalTarget)));
+                document.querySelectorAll('.modal-overlay').forEach(modal => modal.addEventListener('click', (e) => e.target === modal && hideModal(modal.id)));
+                document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => hideModal(btn.closest('.modal-overlay').id)));
+            }
 
-                    tasksJsonOutput.textContent = JSON.stringify(data, null, 2);
+            function showModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (!modal) return;
 
-                } catch (error) {
-                    tasksJsonOutput.textContent = `Ocorreu um erro:\n${error.message}`;
-                } finally {
-                    fetchTasksButton.disabled = false;
+                if (modalId === 'boletim-modal') {
+                    const grid = document.getElementById('boletim-grid');
+                    let content = '<p>Nenhuma nota encontrada.</p>';
+                    if (fullData.boletim && fullData.boletim.length > 0) {
+                        content = fullData.boletim.map(disciplina => `
+                            <div class="disciplina-card">
+                                <h3>${disciplina.descricaoDisciplina}</h3>
+                                <p>1º Bim: ${disciplina.notaBimestre1 || '-'}</p>
+                                <p>2º Bim: ${disciplina.notaBimestre2 || '-'}</p>
+                                <p>3º Bim: ${disciplina.notaBimestre3 || '-'}</p>
+                                <p>4º Bim: ${disciplina.notaBimestre4 || '-'}</p>
+                            </div>
+                        `).join('');
+                    }
+                    grid.innerHTML = content;
                 }
-            });
+                
+                modal.classList.add('is-visible');
+            }
+
+            function hideModal(modalId) {
+                document.getElementById(modalId)?.classList.remove('is-visible');
+            }
         });
     </script>
 </body>
