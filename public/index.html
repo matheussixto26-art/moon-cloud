@@ -4,46 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bests.IA</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg-dark:#0d1117; --bg-medium:#161b22; --border-color:#30363d; --text-primary:#c9d1d9; --text-secondary:#8b949e; --accent-color:#388bfd; --accent-color-hover:#58a6ff; --accent-red:#da3633; --accent-green:#238636; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background-color: var(--bg-dark); color: var(--text-primary); font-family: 'Poppins', sans-serif; overflow: hidden; }
-        .hidden { display: none !important; }
-        #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .login-container { background-color: var(--bg-medium); padding: 40px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
-        h1, h2 { color: #fff; }
-        .login-container h1 { margin-bottom: 30px; }
-        .input-group input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-dark); color: var(--text-primary); }
-        .login-container button { width: 100%; padding: 15px; border: none; border-radius: 6px; background-color: var(--accent-color); color: white; font-weight: 600; cursor: pointer; }
-        #login-message { margin-top: 20px; min-height: 20px; color: var(--accent-red); }
-        #dashboard-screen { display: flex; height: 100vh; flex-direction: column; }
-        .main-content { flex-grow: 1; padding: 20px; overflow-y: auto; }
-        .main-header { padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
-        .main-header p { color: var(--text-secondary); }
-        .cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding-top: 20px; }
-        .dashboard-card { background-color: var(--bg-medium); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; cursor: pointer; }
-        .dashboard-card:hover { border-color: var(--accent-color); }
-        .card-title { font-size: 1em; color: var(--text-secondary); }
-        .card-data { font-size: 2.5em; font-weight: 700; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; }
-        .modal-overlay.is-visible { opacity: 1; pointer-events: all; }
-        .modal-content { background-color: var(--bg-medium); padding: 20px; border-radius: 8px; width: 95%; max-width: 700px; max-height: 85vh; overflow-y: auto; }
-        .modal-close { float: right; background: none; border: none; color: var(--text-primary); font-size: 1.5em; cursor: pointer; }
-        .modal-list .list-item { list-style: none; padding: 15px; border-bottom: 1px solid var(--border-color); }
-        .list-item:hover { background-color: var(--border-color); }
-        .list-item h3 { margin-bottom: 5px; }
-        .list-item p { color: var(--text-secondary); }
-        .boletim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-    </style>
+    <link href="style.css" rel="stylesheet">
 </head>
 <body>
     <div id="login-screen">
-        <div class="login-container"><h1>Bests.IA</h1><form id="login-form"><div class="input-group"><input type="text" id="ra" placeholder="RA com dígito e UF" required></div><div class="input-group"><input type="password" id="senha" placeholder="Senha da SED" required></div><button type="submit" id="login-button">Entrar</button></form><div id="login-message"></div></div>
+        <div class="login-container">
+            <h1>Bests.IA</h1>
+            <form id="login-form">
+                <div class="input-group"><input type="text" id="ra" placeholder="RA com dígito e UF" required></div>
+                <div class="input-group"><input type="password" id="senha" placeholder="Senha da SED" required></div>
+                <button type="submit" id="login-button">Entrar</button>
+            </form>
+            <div id="login-message-wrapper"><div id="login-message"></div></div>
+            <div class="save-login-wrapper"><label><input type="checkbox" id="save-login-checkbox"> Salvar Login</label></div>
+        </div>
     </div>
+
     <div id="dashboard-screen" class="hidden">
-        <main class="main-content">
-            <header class="main-header"><h1 id="welcome-message"></h1><p id="school-name"></p></header>
+        <header class="main-header">
+            <button id="hamburger-btn">☰</button>
+            <h1 id="header-title">Bests.IA</h1>
+        </header>
+        
+        <nav id="sidebar" class="sidebar">
+            <div id="user-profile">
+                <h2 id="welcome-message"></h2>
+                <p id="school-name"></p>
+            </div>
+            </nav>
+
+        <main id="main-content" class="main-content">
             <div class="cards-container">
                 <div class="dashboard-card" data-modal-target="faltas-modal"><div>Faltas no Bimestre</div><div class="card-data" id="faltas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="tarefas-modal"><div>Tarefas Pendentes</div><div class="card-data" id="tarefas-count">0</div></div>
@@ -54,113 +44,15 @@
             </div>
         </main>
     </div>
-    
+
     <div id="faltas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Faltas</h2><ul class="modal-list" id="faltas-list"></ul></div></div>
     <div id="tarefas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Tarefas</h2><ul class="modal-list" id="tarefas-list"></ul></div></div>
     <div id="conquistas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Conquistas</h2><ul class="modal-list" id="conquistas-list"></ul></div></div>
     <div id="notificacoes-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Notificações</h2><ul class="modal-list" id="notificacoes-list"></ul></div></div>
     <div id="boletim-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Boletim</h2><div class="boletim-grid" id="boletim-grid"></div></div></div>
-    <div id="medalhas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Medalhas Semanais (Tarefa SP)</h2><ul class="modal-list" id="medalhas-list"></ul></div></div>
+    <div id="medalhas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Medalhas Semanais</h2><ul class="modal-list" id="medalhas-list"></ul></div></div>
+    <div id="task-viewer-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2 id="task-viewer-title"></h2><form id="task-form"><div id="task-viewer-content"></div><button type="submit">Enviar Respostas</button></form></div></div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const loginScreen = document.getElementById('login-screen');
-            const dashboardScreen = document.getElementById('dashboard-screen');
-            const loginForm = document.getElementById('login-form');
-            const loginButton = document.getElementById('login-button');
-            const loginMessage = document.getElementById('login-message');
-            let fullData = {};
-
-            loginForm.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                loginButton.disabled = true;
-                loginMessage.textContent = 'Buscando dados...';
-                try {
-                    const response = await fetch('/api/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user: document.getElementById('ra').value, senha: document.getElementById('senha').value }),
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error);
-                    fullData = data;
-                    showDashboard();
-                } catch (error) {
-                    loginMessage.textContent = `❌ ${error.message}`;
-                } finally {
-                    loginButton.disabled = false;
-                }
-            });
-
-            function showDashboard() {
-                populateDashboard();
-                setupEventListeners();
-                loginScreen.classList.add('hidden');
-                dashboardScreen.classList.remove('hidden');
-            }
-
-            function populateDashboard() {
-                const userName = fullData.userInfo?.NOME_COMPLETO || fullData.userInfo?.NAME || fullData.userInfo?.NOME || 'Aluno(a)';
-                const firstName = userName.split(' ')[0];
-                document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${firstName}!`;
-                document.getElementById('school-name').textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
-                
-                document.getElementById('faltas-count').textContent = fullData.faltas?.length || 0;
-                document.getElementById('tarefas-count').textContent = fullData.tarefas?.length || 0;
-                document.getElementById('conquistas-count').textContent = fullData.conquistas?.length || 0;
-                document.getElementById('notificacoes-count').textContent = fullData.notificacoes?.length || 0;
-                document.getElementById('medalhas-count').textContent = fullData.medalhasSemanais?.length || 0;
-            }
-
-            function setupEventListeners() {
-                document.querySelectorAll('.dashboard-card').forEach(card => card.addEventListener('click', () => showModal(card.dataset.modalTarget)));
-                document.querySelectorAll('.modal-overlay').forEach(modal => modal.addEventListener('click', (e) => e.target === modal && hideModal(modal.id)));
-                document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => hideModal(btn.closest('.modal-overlay').id)));
-            }
-
-            function showModal(modalId) {
-                if (!modalId) return;
-                const modal = document.getElementById(modalId);
-                let content = '<p style="padding: 15px;">Nenhuma informação encontrada.</p>';
-                
-                try {
-                     if (modalId === 'boletim-modal') {
-                        const grid = document.getElementById('boletim-grid');
-                        if (fullData.boletim?.length > 0) {
-                            content = fullData.boletim.map(d => `<div class="list-item"><h3>${d.descricaoDisciplina}</h3><p>Nota: ${d.notaBimestre1 || '-'}</p></div>`).join('');
-                        }
-                        grid.innerHTML = content;
-                    } else {
-                        const list = modal.querySelector('.modal-list');
-                         switch(modalId) {
-                            case 'faltas-modal':
-                                if (fullData.faltas?.length > 0) content = fullData.faltas.map(item => `<li class="list-item"><h3>${item.disciplina}</h3><p>Faltas: ${item.numeroFaltas}</p></li>`).join('');
-                                break;
-                            case 'tarefas-modal':
-                                if (fullData.tarefas?.length > 0) content = fullData.tarefas.map(item => `<li class="list-item"><h3>${item.title}</h3><p>Status: ${item.answer?.status === 'submitted' ? 'Entregue' : (item.status === 'expired' ? 'Expirada' : 'Pendente')}</p></li>`).join('');
-                                break;
-                            case 'conquistas-modal':
-                                if (fullData.conquistas?.length > 0) content = fullData.conquistas.map(item => `<li class="list-item"><h3>${item.projeto}</h3><p>Medalha: ${item.medalha}</p></li>`).join('');
-                                break;
-                            case 'notificacoes-modal':
-                                if (fullData.notificacoes?.length > 0) content = fullData.notificacoes.map(item => `<li class="list-item"><h3>${item.seesp_titulo}</h3><p>${item.seesp_mensagem}</p></li>`).join('');
-                                break;
-                             case 'medalhas-modal':
-                                 if (fullData.medalhasSemanais?.length > 0) content = fullData.medalhasSemanais.map(item => `<li class="list-item"><h3>${item.goal.name}</h3><p>Progresso: ${item.progress} / ${item.goal.target_value}</p></li>`).join('');
-                                 break;
-                        }
-                        list.innerHTML = content;
-                    }
-                } catch(e) { console.error("Erro ao popular modal:", e); }
-
-                modal.classList.add('is-visible');
-            }
-
-            function hideModal(modalId) {
-                document.getElementById(modalId)?.classList.remove('is-visible');
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
-                                                                                  </html>
-                                                                                  
+</html>
