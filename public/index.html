@@ -6,32 +6,40 @@
     <title>MoonFuturo</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg-dark:#0d1117; --bg-medium:#161b22; --border-color:#30363d; --text-primary:#c9d1d9; --text-secondary:#8b949e; --accent-color:#238636; }
+        :root {
+            --bg-dark: #0d1117; --bg-medium: #161b22; --border-color: #30363d;
+            --text-primary: #c9d1d9; --text-secondary: #8b949e; --accent-color: #238636;
+            --accent-red: #da3633;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: var(--bg-dark); color: var(--text-primary); font-family: 'Poppins', sans-serif; overflow: hidden; }
         .hidden { display: none !important; }
+        
         #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; }
         .login-container { background-color: var(--bg-medium); padding: 40px; border-radius: 10px; width: 100%; max-width: 400px; text-align: center; }
-        h1 { margin-bottom: 30px; }
+        .login-container h1 { margin-bottom: 30px; }
         .input-group { margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-dark); color: var(--text-primary); }
-        button { width: 100%; padding: 15px; border: none; border-radius: 6px; background-color: var(--accent-color); color: white; font-weight: 600; cursor: pointer; }
-        #login-message { margin-top: 20px; min-height: 20px; color: #da3633; }
+        .input-group input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-dark); color: var(--text-primary); }
+        .login-container button { width: 100%; padding: 15px; border: none; border-radius: 6px; background-color: var(--accent-color); color: white; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .login-container button:disabled { background-color: #8b949e; cursor: not-allowed; }
+        #login-message { margin-top: 20px; font-weight: 600; min-height: 20px; color: var(--accent-red); }
+
         #dashboard-screen { display: flex; height: 100vh; }
-        .sidebar { width: 250px; background-color: var(--bg-medium); padding: 25px; }
+        .sidebar { width: 250px; background-color: var(--bg-medium); padding: 25px; border-right: 1px solid var(--border-color); }
         .main-content { flex-grow: 1; padding: 25px; overflow-y: auto; }
         .main-header p { color: var(--text-secondary); }
         .cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; padding-top: 25px; }
         .dashboard-card { background-color: var(--bg-medium); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; cursor: pointer; }
+        .card-title { font-size: 1em; color: var(--text-secondary); }
         .card-data { font-size: 2.8em; font-weight: 700; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .modal-overlay.is-visible { opacity: 1; pointer-events: all; }
-        .modal-content { background-color: var(--bg-medium); padding: 30px; border-radius: 8px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; }
-        .modal-close { float: right; background: none; border: none; color: var(--text-primary); font-size: 1.5em; cursor: pointer; }
-        .boletim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 1.5rem; }
-        .disciplina-card { background-color: var(--bg-dark); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); }
-        .disciplina-card h3 { font-size: 1.1em; margin-bottom: 10px; }
-        .disciplina-card p { font-size: 0.9em; }
+        .modal-content { background-color: var(--bg-medium); padding: 30px; border-radius: 8px; width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto; position: relative; }
+        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-primary); font-size: 1.5em; cursor: pointer; }
+        .modal-list .list-item { list-style: none; padding: 15px; border-bottom: 1px solid var(--border-color); }
+        .list-item h3 { font-size: 1.1em; }
+        .list-item p { font-size: 0.9em; color: var(--text-secondary); }
     </style>
 </head>
 <body>
@@ -51,21 +59,18 @@
         <main class="main-content">
             <header class="main-header"><h1 id="welcome-message"></h1><p id="school-name"></p></header>
             <div class="cards-container">
-                <div class="dashboard-card" data-modal-target="boletim-modal"><div>Boletim</div><div class="card-data" id="boletim-status">Ver</div></div>
-                <div class="dashboard-card"><div>Tarefas Pendentes</div><div class="card-data" id="tarefas-count">0</div></div>
-                <div class="dashboard-card"><div>Conquistas</div><div class="card-data" id="conquistas-count">0</div></div>
-                <div class="dashboard-card"><div>Notificações</div><div class="card-data" id="notificacoes-count">0</div></div>
+                <div class="dashboard-card" data-modal-target="faltas-modal"><div class="card-title">Faltas no Bimestre</div><div class="card-data" id="faltas-count">0</div></div>
+                <div class="dashboard-card" data-modal-target="conquistas-modal"><div class="card-title">Conquistas</div><div class="card-data" id="conquistas-count">0</div></div>
+                <div class="dashboard-card" data-modal-target="notificacoes-modal"><div class="card-title">Notificações</div><div class="card-data" id="notificacoes-count">0</div></div>
+                <div class="dashboard-card"><div class="card-title">Tarefas Pendentes</div><div class="card-data" id="tarefas-count">?</div></div>
+                <div class="dashboard-card"><div class="card-title">Redações</div><div class="card-data" id="redacoes-count">?</div></div>
             </div>
         </main>
     </div>
     
-    <div id="boletim-modal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="modal-close">&times;</button>
-            <h2>Boletim Anual</h2>
-            <div class="boletim-grid" id="boletim-grid"></div>
-        </div>
-    </div>
+    <div id="faltas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Faltas por Disciplina</h2><ul class="modal-list" id="faltas-list"></ul></div></div>
+    <div id="conquistas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Minhas Conquistas</h2><ul class="modal-list" id="conquistas-list"></ul></div></div>
+    <div id="notificacoes-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Notificações</h2><ul class="modal-list" id="notificacoes-list"></ul></div></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -105,12 +110,12 @@
             }
 
             function populateDashboard() {
-                const userName = fullData.userInfo?.NOME_COMPLETO || 'Aluno(a)';
+                const userName = fullData.userInfo?.NOME_COMPLETO || fullData.userInfo?.NOME || fullData.userInfo?.NAME || 'Aluno(a)';
                 const firstName = userName.split(' ')[0];
                 document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${firstName}!`;
                 document.getElementById('school-name').textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
                 
-                document.getElementById('tarefas-count').textContent = fullData.tarefas?.length || 0;
+                document.getElementById('faltas-count').textContent = fullData.faltas?.length || 0;
                 document.getElementById('conquistas-count').textContent = fullData.conquistas?.length || 0;
                 document.getElementById('notificacoes-count').textContent = fullData.notificacoes?.length || 0;
             }
@@ -122,26 +127,26 @@
             }
 
             function showModal(modalId) {
+                if (!modalId) return;
                 const modal = document.getElementById(modalId);
-                if (!modal) return;
+                const list = modal.querySelector('.modal-list');
+                let content = '<li class="list-item"><p>Nenhuma informação encontrada.</p></li>';
 
-                if (modalId === 'boletim-modal') {
-                    const grid = document.getElementById('boletim-grid');
-                    let content = '<p>Nenhuma nota encontrada.</p>';
-                    if (fullData.boletim && fullData.boletim.length > 0) {
-                        content = fullData.boletim.map(disciplina => `
-                            <div class="disciplina-card">
-                                <h3>${disciplina.descricaoDisciplina}</h3>
-                                <p>1º Bim: ${disciplina.notaBimestre1 || '-'}</p>
-                                <p>2º Bim: ${disciplina.notaBimestre2 || '-'}</p>
-                                <p>3º Bim: ${disciplina.notaBimestre3 || '-'}</p>
-                                <p>4º Bim: ${disciplina.notaBimestre4 || '-'}</p>
-                            </div>
-                        `).join('');
+                try {
+                    switch(modalId) {
+                        case 'faltas-modal':
+                            if (fullData.faltas?.length > 0) content = fullData.faltas.map(item => `<li class="list-item"><h3>${item.disciplina}</h3><p>Total de Faltas: ${item.numeroFaltas}</p></li>`).join('');
+                            break;
+                        case 'conquistas-modal':
+                            if (fullData.conquistas?.length > 0) content = fullData.conquistas.map(item => `<li class="list-item"><h3>${item.projeto}</h3><p>Medalha: ${item.medalha}</p></li>`).join('');
+                            break;
+                        case 'notificacoes-modal':
+                            if (fullData.notificacoes?.length > 0) content = fullData.notificacoes.map(item => `<li class="list-item"><h3>${item.seesp_titulo}</h3><p>${item.seesp_mensagem}</p></li>`).join('');
+                            break;
                     }
-                    grid.innerHTML = content;
-                }
-                
+                } catch(e) { console.error("Erro ao popular modal:", e); }
+
+                list.innerHTML = content;
                 modal.classList.add('is-visible');
             }
 
@@ -151,4 +156,5 @@
         });
     </script>
 </body>
-</html>
+    </html>
+    
