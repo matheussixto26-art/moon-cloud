@@ -22,12 +22,12 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const loginResponse = await axios.post( "https://sedintegracoes.educacao.sp.gov.br/credenciais/api/LoginCompletoToken", { user, senha }, { headers: { "Ocp-Apim-Subscription-Key": "2b03c1db3884488795f79c37c069381a" } });
+        const loginResponse = await axios.post("https://sedintegracoes.educacao.sp.gov.br/credenciais/api/LoginCompletoToken", { user, senha }, { headers: { "Ocp-Apim-Subscription-Key": "2b03c1db3884488795f79c37c069381a" } });
         const tokenA = loginResponse.data.token;
         const userInfo = loginResponse.data.DadosUsuario;
         if (!tokenA || !userInfo) return res.status(401).json({ error: 'Credenciais inválidas.' });
 
-        const exchangeResponse = await axios.post( "https://edusp-api.ip.tv/registration/edusp/token", { token: tokenA }, { headers: { "Content-Type": "application/json", "x-api-realm": "edusp", "x-api-platform": "webclient" } });
+        const exchangeResponse = await axios.post("https://edusp-api.ip.tv/registration/edusp/token", { token: tokenA }, { headers: { "Content-Type": "application/json", "x-api-realm": "edusp", "x-api-platform": "webclient" } });
         const tokenB = exchangeResponse.data.auth_token;
         if (!tokenB) return res.status(500).json({ error: 'Falha ao obter o token secundário.' });
         
@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
 
         let publicationTargetsQuery = '';
         if (roomUserData && roomUserData.rooms) {
-            const targets = roomUserData.rooms.flatMap(room => [room.publication_target, ...(room.group_categories?.map(g => g.id) || [])]);
+            const targets = roomUserData.rooms.flatMap(room => [room.publication_target, room.name, ...(room.group_categories?.map(g => g.id) || [])]);
             publicationTargetsQuery = [...new Set(targets)].map(target => `publication_target[]=${encodeURIComponent(target)}`).join('&');
         }
 
@@ -48,32 +48,31 @@ module.exports = async (req, res) => {
         const [raNumber, raDigit, raUf] = user.match(/^(\d+)(\d)(\w+)$/).slice(1);
 
         const requests = [
-             fetchApiData({ // Faltas
+             fetchApiData({
                 method: 'get',
-                url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
+                url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFrequenciaAluno?anoLetivo=${anoLetivo}&codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
-            fetchApiData({ // Tarefas
+            fetchApiData({
                 method: 'get',
-                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&is_essay=false&is_exam=false&answer_statuses=draft&answer_statuses=pending&with_answer=true&limit=100&${publicationTargetsQuery}`,
+                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=false&answer_statuses=draft&answer_statuses=pending&with_answer=true&limit=100&${publicationTargetsQuery}`,
                 headers: { "x-api-key": tokenB, "Referer": "https://saladofuturo.educacao.sp.gov.br/" }
             }),
-            fetchApiData({ // Conquistas
+            fetchApiData({
                 method: 'get',
                 url: `https://sedintegracoes.educacao.sp.gov.br/apisalaconquistas/api/salaConquista/conquistaAluno?CodigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "008ada07395f4045bc6e795d63718090" }
             }),
-            fetchApiData({ // Notificações
+            fetchApiData({
                 method: 'get',
                 url: `https://sedintegracoes.educacao.sp.gov.br/cmspwebservice/api/sala-do-futuro-alunos/consulta-notificacao?userId=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "1a758fd2f6be41448079c9616a861b91" }
             }),
-            fetchApiData({ // Dados do Aluno (Nome e Escola)
+            fetchApiData({
                  method: 'get',
                  url: `https://sedintegracoes.educacao.sp.gov.br/alunoapi/api/Aluno/ExibirAluno?inNumRA=${raNumber}&inDigitoRA=${raDigit}&inSiglaUFRA=${raUf}`,
                  headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "b141f65a88354e078a9d4fdb1df29867" }
             }),
-            // NOVA CHAMADA PARA O BOLETIM
             fetchApiData({
                 method: 'get',
                 url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Fechamento/ConsultaFechamentoComparativo?codigoAluno=${codigoAluno}&anoLetivo=${anoLetivo}&somenteAtivo=0&tipoFechamento=5&codigoDisciplina=0`,
@@ -83,20 +82,19 @@ module.exports = async (req, res) => {
 
         const [faltasData, tarefas, conquistas, notificacoes, dadosAluno, boletimData] = await Promise.all(requests);
         
-        if(dadosAluno?.data?.outDadosPessoais?.outNomeAluno) {
-            userInfo.NOME_COMPLETO = dadosAluno.data.outDadosPessoais.outNomeAluno;
-        }
-         if(dadosAluno?.data?.outDocumentos?.nmEscola) {
-             userInfo.NOME_ESCOLA = dadosAluno.data.outDocumentos.nmEscola;
+        if(dadosAluno?.aluno?.nome) {
+            userInfo.NOME_COMPLETO = dadosAluno.aluno.nome;
+            userInfo.NOME_ESCOLA = dadosAluno.aluno.nmEscola;
         }
 
+        // TRADUTOR UNIVERSAL: Garantindo que o formato dos dados seja sempre consistente
         const dashboardData = {
             userInfo: userInfo,
-            faltas: faltasData?.data || [],
-            tarefas: tarefas || [],
+            faltas: faltasData?.data?.disciplinas || [],
+            tarefas: Array.isArray(tarefas) ? tarefas : [],
             conquistas: conquistas?.data || [],
-            notificacoes: notificacoes || [],
-            boletim: boletimData?.data || [] // Adicionando os dados do boletim
+            notificacoes: Array.isArray(notificacoes) ? notificacoes : [],
+            boletim: boletimData?.data || []
         };
 
         res.status(200).json(dashboardData);
@@ -106,4 +104,4 @@ module.exports = async (req, res) => {
         res.status(error.response?.status || 500).json({ error: errorMessage });
     }
 };
-
+            
