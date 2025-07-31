@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
         const requests = [
              fetchApiData({
                 method: 'get',
-                url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFrequenciaAluno?anoLetivo=${anoLetivo}&codigoAluno=${codigoAluno}`,
+                url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
             fetchApiData({
@@ -87,10 +87,9 @@ module.exports = async (req, res) => {
             userInfo.NOME_ESCOLA = dadosAluno.aluno.nmEscola;
         }
 
-        // TRADUTOR UNIVERSAL: Garantindo que o formato dos dados seja sempre consistente
         const dashboardData = {
             userInfo: userInfo,
-            faltas: faltasData?.data?.disciplinas || [],
+            faltas: faltasData?.data || [],
             tarefas: Array.isArray(tarefas) ? tarefas : [],
             conquistas: conquistas?.data || [],
             notificacoes: Array.isArray(notificacoes) ? notificacoes : [],
@@ -104,4 +103,4 @@ module.exports = async (req, res) => {
         res.status(error.response?.status || 500).json({ error: errorMessage });
     }
 };
-            
+
