@@ -1,0 +1,38 @@
+const axios = require('axios');
+
+const getEduspHeaders = (token) => ({
+    'x-api-key': token,
+    'x-client-domain': 'taskitos.cupiditys.lol',
+    'origin': 'https://taskitos.cupiditys.lol',
+    'referer': 'https://saladofuturo.educacao.sp.gov.br/',
+    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36'
+});
+
+module.exports = async (req, res) => {
+    if (req.method !== 'POST') return res.status(405).end();
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    const { type, taskId, token, room, answers } = req.body;
+    if (!type || !token) return res.status(400).json({ error: 'Parâmetros insuficientes.' });
+    
+    let url, payload;
+    if (type === 'preview') {
+        if (!taskId || !room) return res.status(400).json({ error: 'taskId e room são necessários.' });
+        url = 'https://edusp-api.ip.tv/tms/task/preview';
+        payload = { task_id: taskId, publication_target: room };
+    } else if (type === 'submit') {
+        if (!taskId || !room || !answers) return res.status(400).json({ error: 'Dados insuficientes para enviar.' });
+        url = 'https://edusp-api.ip.tv/tms/answer';
+        payload = { task_id: taskId, publication_target: room, status: 'submitted', answers: answers };
+    } else {
+        return res.status(400).json({ error: 'Tipo de ação inválido.' });
+    }
+
+    try {
+        const response = await axios.post(url, payload, { headers: getEduspHeaders(token) });
+        return res.status(200).json(response.data);
+    } catch (error) {
+        const errorDetails = error.response ? error.response.data : error.message;
+        res.status(error.response?.status || 500).json({ error: `Falha na API de tarefa: ${type}`, details: errorDetails });
+    }
+};
