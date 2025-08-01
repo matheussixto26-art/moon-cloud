@@ -30,10 +30,8 @@ module.exports = async (req, res) => {
             const genAI = new GoogleGenerativeAI(geminiApiKey);
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
             const result = await model.generateContent(prompt);
-            const response = await result.response;
-            return res.status(200).json({ text: response.text() });
+            return res.status(200).json({ text: result.response.text() });
         } catch (error) {
-            console.error("Erro na API do Gemini:", error);
             return res.status(500).json({ error: 'Falha ao gerar texto com a IA.' });
         }
     } else {
@@ -47,4 +45,4 @@ module.exports = async (req, res) => {
         res.status(error.response?.status || 500).json({ error: `Falha na API de tarefa: ${type}` });
     }
 };
-    
+                
