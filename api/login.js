@@ -20,7 +20,7 @@ async function fetchApiData(requestConfig) {
 
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(405).end();
-
+    
     const { user, senha } = req.body;
     if (!user || !senha) return res.status(400).json({ error: 'RA e Senha são obrigatórios.' });
 
@@ -43,7 +43,6 @@ module.exports = async (req, res) => {
         }
 
         const codigoAluno = userInfo.CD_USUARIO;
-        const anoLetivo = new Date().getFullYear();
         
         const requests = [
              fetchApiData({
@@ -51,9 +50,10 @@ module.exports = async (req, res) => {
                 url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
-            fetchApiData({ // Buscando TODAS as tarefas
+            // Busca TAREFAS (is_essay=false)
+            fetchApiData({
                 method: 'get',
-                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=true&limit=100&filter_expired=false&${publicationTargetsQuery}`,
+                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=true&limit=100&is_essay=false&${publicationTargetsQuery}`,
                 headers: getEduspHeaders(tokenB)
             }),
             fetchApiData({
@@ -66,11 +66,12 @@ module.exports = async (req, res) => {
                 url: `https://sedintegracoes.educacao.sp.gov.br/cmspwebservice/api/sala-do-futuro-alunos/consulta-notificacao?userId=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "1a758fd2f6be41448079c9616a861b91" }
             }),
-             fetchApiData({ // NOVA CHAMADA PARA REDAÇÕES
+            // Busca REDAÇÕES (is_essay=true)
+            fetchApiData({
                 method: 'get',
-                url: `https://edusp-api.ip.tv/tms/task/todo?is_essay=true&limit=100&${publicationTargetsQuery}`,
+                url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=true&limit=100&is_essay=true&${publicationTargetsQuery}`,
                 headers: getEduspHeaders(tokenB)
-            }),
+            })
         ];
 
         const [faltasData, tarefas, conquistas, notificacoes, redacoes] = await Promise.all(requests);
@@ -86,7 +87,7 @@ module.exports = async (req, res) => {
             tarefas: tarefas || [],
             conquistas: conquistas?.data || [],
             notificacoes: notificacoes || [],
-            redacoes: redacoes || [],
+            redacoes: redacoes || []
         };
 
         res.status(200).json(dashboardData);
@@ -94,4 +95,3 @@ module.exports = async (req, res) => {
         res.status(error.response?.status || 500).json({ error: 'RA ou Senha inválidos, ou falha na API.' });
     }
 };
-    
