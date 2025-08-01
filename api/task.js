@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const getEduspHeaders = (token) => ({
     'x-api-key': token,
@@ -11,7 +12,7 @@ const getEduspHeaders = (token) => ({
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(405).end();
     
-    const { type, taskId, token, room, answers } = req.body;
+    const { type, taskId, token, room, answers, prompt, geminiApiKey } = req.body;
     if (!type || !token) return res.status(400).json({ error: 'Parâmetros insuficientes.' });
     
     let url, payload;
@@ -23,6 +24,18 @@ module.exports = async (req, res) => {
         if (!taskId || !room || !answers) return res.status(400).json({ error: 'Dados insuficientes para enviar.' });
         url = 'https://edusp-api.ip.tv/tms/answer';
         payload = { task_id: taskId, publication_target: room, status: 'submitted', answers: answers };
+    } else if (type === 'generate_essay') {
+        if (!prompt || !geminiApiKey) return res.status(400).json({ error: 'Prompt e chave da API Gemini são necessários.' });
+        try {
+            const genAI = new GoogleGenerativeAI(geminiApiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            return res.status(200).json({ text: response.text() });
+        } catch (error) {
+            console.error("Erro na API do Gemini:", error);
+            return res.status(500).json({ error: 'Falha ao gerar texto com a IA.' });
+        }
     } else {
         return res.status(400).json({ error: 'Tipo de ação inválido.' });
     }
@@ -34,3 +47,4 @@ module.exports = async (req, res) => {
         res.status(error.response?.status || 500).json({ error: `Falha na API de tarefa: ${type}` });
     }
 };
+    
