@@ -6,35 +6,34 @@
     <title>Bests.IA</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg-color: #f0f2f5; --card-bg: #ffffff; --text-color: #1c1e21; --secondary-text: #606770; --accent-color: #1877f2; --border-color: #dddfe2; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Poppins', sans-serif; }
-        .hidden { display: none !important; }
-
-        #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 15px; }
-        .login-container { background-color: var(--card-bg); padding: 30px; border-radius: 10px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .login-container h1 { margin-bottom: 25px; }
-        .input-group input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1em; }
-        .login-container button { width: 100%; padding: 14px; border: none; border-radius: 8px; background-color: var(--accent-color); color: white; font-weight: 600; cursor: pointer; }
-        #login-message-wrapper { margin-top: 20px; min-height: 22px; }
-        .save-login-wrapper { margin-top: 15px; color: var(--secondary-text); }
-
-        #dashboard-screen { height: 100vh; display: flex; flex-direction: column; }
-        .main-header { display: flex; align-items: center; padding: 15px; background-color: var(--card-bg); border-bottom: 1px solid var(--border-color); }
-        #hamburger-btn { background: none; border: none; font-size: 1.5em; cursor: pointer; margin-right: 15px; }
-        .sidebar { position: fixed; top: 0; left: -100%; width: 250px; height: 100%; background-color: var(--card-bg); padding: 20px; z-index: 1001; transition: left 0.3s ease; border-right: 1px solid var(--border-color); }
-        .sidebar.is-open { left: 0; }
-        .main-content { flex-grow: 1; padding: 20px; overflow-y: auto; }
-        .cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .dashboard-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; cursor: pointer; }
-        .card-data { font-size: 2.5em; font-weight: 700; color: var(--accent-color); }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1002; opacity: 0; pointer-events: none; }
-        .modal-overlay.is-visible { opacity: 1; pointer-events: all; }
-        .modal-content { background-color: var(--card-bg); padding: 20px; border-radius: 8px; width: 95%; max-width: 700px; max-height: 85vh; overflow-y: auto; }
-        .modal-close { float: right; background: none; border: none; font-size: 1.5em; cursor: pointer; }
-        .list-item { list-style: none; padding: 15px; border-bottom: 1px solid var(--border-color); }
-        .list-item:hover { background-color: var(--bg-color); }
-        .question-option label { display: block; padding: 10px; margin-bottom: 8px; border-radius: 5px; border: 1px solid var(--border-color); }
+        :root { --bg-dark:#1a1a2e; --bg-medium:#16213e; --border-color:#0f3460; --text-primary:#e0e0e0; --text-secondary:#a7a9be; --accent-color:#e94560; --accent-red:#da3633; --accent-green:#238636; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background-color:var(--bg-dark); color:var(--text-primary); font-family:'Poppins', sans-serif; }
+        .hidden { display:none!important; }
+        #login-screen { display:flex; justify-content:center; align-items:center; height:100vh; padding:15px; }
+        .login-container { background-color:var(--bg-medium); padding:30px; border-radius:10px; width:100%; max-width:400px; text-align:center; border:1px solid var(--border-color); }
+        .login-container h1 { margin-bottom:25px; color:#fff; }
+        .input-group input { width:100%; padding:14px; margin-bottom:15px; border:1px solid var(--border-color); border-radius:8px; background-color:var(--bg-dark); color:var(--text-primary); font-size:1em; }
+        .login-container button { width:100%; padding:14px; border:none; border-radius:8px; background-color:var(--accent-color); color:white; font-weight:600; cursor:pointer; }
+        #login-message-wrapper { margin-top:20px; min-height:22px; }
+        .save-login-wrapper { margin-top:15px; color:var(--text-secondary); }
+        #dashboard-screen { display:flex; flex-direction:column; height:100vh; }
+        .main-header { display:flex; align-items:center; justify-content:space-between; padding:15px; background-color:var(--bg-medium); border-bottom:1px solid var(--border-color); }
+        #hamburger-btn { background:none; border:none; color:var(--text-primary); font-size:1.5em; cursor:pointer; }
+        .sidebar { position:fixed; top:0; left:-100%; width:250px; height:100%; background-color:var(--bg-medium); padding:20px; z-index:1001; transition:left 0.3s ease; border-right:1px solid var(--border-color); }
+        .sidebar.is-open { left:0; }
+        .main-content { flex-grow:1; padding:20px; overflow-y:auto; }
+        .cards-container { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; }
+        .dashboard-card { background-color:var(--bg-medium); border:1px solid var(--border-color); border-radius:8px; padding:20px; cursor:pointer; }
+        .card-data { font-size:2.5em; font-weight:700; color:var(--accent-color); }
+        .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1002; opacity:0; pointer-events:none; }
+        .modal-overlay.is-visible { opacity:1; pointer-events:all; }
+        .modal-content { background-color:var(--bg-medium); padding:20px; border-radius:8px; width:95%; max-width:700px; max-height:85vh; overflow-y:auto; }
+        .modal-close { float:right; background:none; border:none; font-size:1.5em; cursor:pointer; }
+        .list-item { list-style:none; padding:15px; border-bottom:1px solid var(--border-color); }
+        .list-item:hover { background-color:var(--border-color); }
+        .question-option label { display:block; padding:10px; margin-bottom:8px; border-radius:5px; border:1px solid var(--border-color); }
+        textarea#essay-prompt { width:100%; min-height:100px; margin-bottom:10px; }
     </style>
 </head>
 <body>
@@ -46,27 +45,28 @@
         <nav id="sidebar" class="sidebar"><div id="user-profile"><h2 id="welcome-message"></h2><p id="school-name"></p></div></nav>
         <main id="main-content" class="main-content">
             <div class="cards-container">
-                <div class="dashboard-card" data-modal-target="faltas-modal"><div>Faltas no Bimestre</div><div class="card-data" id="faltas-count">0</div></div>
+                <div class="dashboard-card" data-modal-target="faltas-modal"><div class="card-title">Faltas</div><div class="card-data" id="faltas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="tarefas-modal"><div>Tarefas</div><div class="card-data" id="tarefas-count">0</div></div>
+                <div class="dashboard-card" data-modal-target="redacoes-modal"><div>Redações</div><div class="card-data" id="redacoes-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="conquistas-modal"><div>Conquistas</div><div class="card-data" id="conquistas-count">0</div></div>
                 <div class="dashboard-card" data-modal-target="notificacoes-modal"><div>Notificações</div><div class="card-data" id="notificacoes-count">0</div></div>
-                <div class="dashboard-card" data-modal-target="boletim-modal"><div>Boletim</div><div class="card-data">Ver</div></div>
-                <div class="dashboard-card" data-modal-target="redacoes-modal"><div>Redações</div><div class="card-data" id="redacoes-count">0</div></div>
             </div>
         </main>
     </div>
     
     <div id="faltas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Faltas</h2><ul class="modal-list" id="faltas-list"></ul></div></div>
     <div id="tarefas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Tarefas</h2><ul class="modal-list" id="tarefas-list"></ul></div></div>
+    <div id="redacoes-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Redações</h2><ul class="modal-list" id="redacoes-list"></ul></div></div>
     <div id="conquistas-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Conquistas</h2><ul class="modal-list" id="conquistas-list"></ul></div></div>
     <div id="notificacoes-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Notificações</h2><ul class="modal-list" id="notificacoes-list"></ul></div></div>
-    <div id="boletim-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Boletim</h2><div class="boletim-grid" id="boletim-grid"></div></div></div>
-    <div id="redacoes-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Redações</h2><ul class="modal-list" id="redacoes-list"></ul></div></div>
-    <div id="task-viewer-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2 id="task-viewer-title"></h2><form id="task-form"><div id="task-viewer-content"></div><button type="submit">Enviar Respostas</button></form></div></div>
+    <div id="task-viewer-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2 id="task-viewer-title"></h2><form id="task-form"><div id="task-viewer-content"></div><hr style="margin:20px 0; border-color:var(--border-color);"><button type="submit">Enviar Respostas</button></form></div></div>
+    <div id="essay-helper-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Assistente de Redação IA</h2><div id="essay-viewer-content"></div><textarea id="essay-prompt" placeholder="Descreva o tema da redação aqui..."></textarea><button id="generate-essay-button">Gerar Redação com IA</button><div id="essay-result" style="margin-top:15px; background-color:var(--bg-dark); padding:10px; border-radius:5px;"></div></div></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             let fullData = {};
+            const GEMINI_API_KEY = "AIzaSyBlB-LMuBI_TpDiKqCjO1zL-KeOjnexODQ";
+            // DOM Elements
             const loginScreen = document.getElementById('login-screen');
             const dashboardScreen = document.getElementById('dashboard-screen');
             const loginForm = document.getElementById('login-form');
@@ -76,19 +76,16 @@
 
             const performLogin = async (ra, senha) => {
                 loginButton.disabled = true;
-                const messages = ['Verificando...', 'Acessando...', 'Carregando...'];
+                const messages = ['Verificando...', 'Acessando plataforma...', 'Carregando dados...'];
                 let msgIndex = 0;
                 loginMessage.textContent = messages[msgIndex];
                 const interval = setInterval(() => { msgIndex = (msgIndex + 1) % messages.length; loginMessage.textContent = messages[msgIndex]; }, 1200);
-
                 try {
                     const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: ra, senha: senha }) });
                     const data = await response.json();
                     clearInterval(interval);
                     if (!response.ok) throw new Error(data.error);
-                    
                     if (saveLoginCheckbox.checked) localStorage.setItem('savedCredentials', JSON.stringify({ ra, senha }));
-                    
                     fullData = data;
                     showDashboard();
                 } catch (error) {
@@ -124,15 +121,13 @@
 
             function populateDashboard() {
                 const userName = fullData.userInfo?.NOME_COMPLETO || fullData.userInfo?.NAME || fullData.userInfo?.NOME || 'Aluno(a)';
-                const firstName = userName.split(' ')[0];
-                document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${firstName}!`;
+                document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${userName.split(' ')[0]}!`;
                 document.getElementById('school-name').textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
-                
                 document.getElementById('faltas-count').textContent = fullData.faltas?.length || 0;
-                document.getElementById('tarefas-count').textContent = fullData.tarefas?.length || 0;
+                document.getElementById('tarefas-count').textContent = (fullData.tarefas || []).filter(t => t.answer?.status !== 'submitted' && t.status !== 'expired').length;
+                document.getElementById('redacoes-count').textContent = fullData.redacoes?.length || 0;
                 document.getElementById('conquistas-count').textContent = fullData.conquistas?.length || 0;
                 document.getElementById('notificacoes-count').textContent = fullData.notificacoes?.length || 0;
-                document.getElementById('redacoes-count').textContent = fullData.redacoes?.length || 0;
             }
 
             function setupEventListeners() {
@@ -146,61 +141,77 @@
                 if (!modalId) return;
                 const modal = document.getElementById(modalId);
                 let content = '<p style="padding: 15px;">Nenhuma informação encontrada.</p>';
-                
                 try {
-                    if (modalId === 'boletim-modal') {
-                        const grid = modal.querySelector('.boletim-grid');
-                        if (fullData.boletim?.length > 0) content = fullData.boletim.map(d => `<div class="list-item"><h3>${d.descricaoDisciplina}</h3><p>Nota: ${d.notaBimestre1 || '-'}</p></div>`).join('');
-                        grid.innerHTML = content;
-                    } else {
-                        const list = modal.querySelector('.modal-list');
-                         switch(modalId) {
-                            case 'faltas-modal':
-                                if (fullData.faltas?.length > 0) content = fullData.faltas.map(item => `<li class="list-item"><h3>${item.disciplina}</h3><p>Faltas: ${item.numeroFaltas}</p></li>`).join('');
-                                break;
-                            case 'tarefas-modal':
-                            case 'redacoes-modal':
-                                const source = modalId === 'tarefas-modal' ? fullData.tarefas : fullData.redacoes;
-                                if (source?.length > 0) content = source.map(item => `<li class="list-item" onclick="openTaskViewer(${item.id}, '${item.publication_target}')"><h3>${item.title}</h3><p>Status: ${item.status === 'expired' ? 'Expirada' : (item.answer?.status || 'Pendente')}</p></li>`).join('');
-                                break;
-                            case 'conquistas-modal':
-                                if (fullData.conquistas?.length > 0) content = fullData.conquistas.map(item => `<li class="list-item"><h3>${item.projeto}</h3><p>Medalha: ${item.medalha}</p></li>`).join('');
-                                break;
-                            case 'notificacoes-modal':
-                                if (fullData.notificacoes?.length > 0) content = fullData.notificacoes.map(item => `<li class="list-item"><h3>${item.seesp_titulo}</h3><p>${item.seesp_mensagem}</p></li>`).join('');
-                                break;
-                        }
-                        list.innerHTML = content;
+                    const list = modal.querySelector('.modal-list');
+                    switch(modalId) {
+                        case 'faltas-modal':
+                            if (fullData.faltas?.length > 0) content = fullData.faltas.map(item => `<li class="list-item"><h3>${item.disciplina}</h3><p>Faltas: ${item.numeroFaltas}</p></li>`).join('');
+                            break;
+                        case 'tarefas-modal':
+                        case 'redacoes-modal':
+                            const source = modalId === 'tarefas-modal' ? fullData.tarefas : fullData.redacoes;
+                            if (source?.length > 0) content = source.map(item => {
+                                let statusText = 'Pendente';
+                                if (item.status === 'expired') statusText = 'Expirada';
+                                if (item.answer?.status === 'submitted') statusText = 'Entregue';
+                                return `<li class="list-item" onclick="openTaskViewer(${item.id}, '${item.publication_target}', ${item.is_essay})"><h3>${item.title}</h3><p>Status: ${statusText}</p></li>`;
+                            }).join('');
+                            break;
+                        case 'conquistas-modal':
+                            if (fullData.conquistas?.length > 0) content = fullData.conquistas.map(item => `<li class="list-item"><h3>${item.projeto}</h3><p>Medalha: ${item.medalha}</p></li>`).join('');
+                            break;
+                        case 'notificacoes-modal':
+                            if (fullData.notificacoes?.length > 0) content = fullData.notificacoes.map(item => `<li class="list-item"><h3>${item.seesp_titulo}</h3><p>${item.seesp_mensagem}</p></li>`).join('');
+                            break;
                     }
+                    if(list) list.innerHTML = content;
                 } catch(e) { console.error("Erro ao popular modal:", e); }
                 modal.classList.add('is-visible');
             }
             function hideModal(modalId) { document.getElementById(modalId)?.classList.remove('is-visible'); }
             
-            async function openTaskViewer(taskId, room) {
-                hideModal('tarefas-modal');
-                hideModal('redacoes-modal');
-                const modal = document.getElementById('task-viewer-modal');
-                const titleEl = document.getElementById('task-viewer-title');
-                const contentEl = document.getElementById('task-viewer-content');
-                const formEl = document.getElementById('task-form');
+            async function openTaskViewer(taskId, room, isEssay) {
+                hideModal(isEssay ? 'redacoes-modal' : 'tarefas-modal');
+                const modalId = isEssay ? 'essay-helper-modal' : 'task-viewer-modal';
+                const modal = document.getElementById(modalId);
+                const titleEl = modal.querySelector('h2');
+                const contentEl = modal.querySelector('div');
                 titleEl.textContent = 'Carregando...'; contentEl.innerHTML = '';
-                showModal('task-viewer-modal');
-
+                showModal(modalId);
+                
                 try {
                     const response = await fetch('/api/task', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'preview', taskId, room, token: fullData.auth_token }) });
                     const taskDetails = await response.json();
                     if (!response.ok) throw new Error(taskDetails.error);
                     
                     titleEl.textContent = taskDetails.task.title;
-                    renderTaskQuestions(taskDetails.task.questions);
-                    formEl.onsubmit = (e) => { e.preventDefault(); submitTask(taskId, room); };
+                    if (isEssay) {
+                        document.getElementById('essay-prompt').value = taskDetails.task.title;
+                        document.getElementById('generate-essay-button').onclick = async () => {
+                           const btn = document.getElementById('generate-essay-button');
+                           btn.disabled = true;
+                           btn.textContent = 'Gerando...';
+                           try {
+                                const iaResponse = await fetch('/api/task', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'generate_essay', prompt: `Crie uma redação sobre o tema: ${taskDetails.task.title}`, geminiApiKey: GEMINI_API_KEY }) });
+                                const iaData = await iaResponse.json();
+                                if (!iaResponse.ok) throw new Error(iaData.error);
+                                document.getElementById('essay-result').textContent = iaData.text;
+                           } catch (error) {
+                               document.getElementById('essay-result').textContent = error.message;
+                           } finally {
+                               btn.disabled = false;
+                               btn.textContent = 'Gerar Redação com IA';
+                           }
+                        };
+                    } else {
+                        renderTaskQuestions(taskDetails.task.questions);
+                        modal.querySelector('form').onsubmit = (e) => { e.preventDefault(); submitTask(taskId, room); };
+                    }
                 } catch (error) { contentEl.innerHTML = `<p>${error.message}</p>`; }
             }
             
             function renderTaskQuestions(questions) {
-                const contentEl = document.getElementById('task-viewer-content');
-                contentEl.innerHTML = questions.map(q => `<div class="question" data-q-id="${q.id}" data-q-type="${q.type}"><h4>${q.title}</h4>${q.options.map(opt => `<div class="question-option"><label><input type="${q.type === 'multi' ? 'checkbox' : 'radio'}" name="q-${q.id}" value="${opt.id}"> ${opt.title}</label></div>`).join('')}</div>`).join('');
+                document.getElementById('task-viewer-content').innerHTML = questions.map(q => `<div class="question" data-q-id="${q.id}" data-q-type="${q.type}"><h4>${q.title}</h4>${q.options.map(opt => `<div class="question-option"><label><input type="${q.type === 'multi' ? 'checkbox' : 'radio'}" name="q-${q.id}" value="${opt.id}"> ${opt.title}</label></div>`).join('')}</div>`).join('');
             }
 
             async function submitTask(taskId, room) {
@@ -212,7 +223,7 @@
                     if (Object.keys(sel).length > 0) answers[qId] = { question_id: parseInt(qId), question_type: qType, answer: sel };
                 });
 
-                const btn = document.getElementById('submit-task-button');
+                const btn = document.getElementById('task-form').querySelector('button');
                 btn.disabled = true;
                 try {
                      const response = await fetch('/api/task', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'submit', taskId, room, token: fullData.auth_token, answers }) });
@@ -229,4 +240,5 @@
         });
     </script>
 </body>
-</html>
+    </html>
+    
