@@ -1,6 +1,5 @@
 const axios = require('axios');
 
-// Headers que imitam um cliente autorizado
 const getEduspHeaders = (token) => ({
     'x-api-key': token,
     'x-client-domain': 'taskitos.cupiditys.lol',
@@ -9,7 +8,6 @@ const getEduspHeaders = (token) => ({
     'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36'
 });
 
-// Função para buscar dados com segurança
 async function fetchApiData(requestConfig) {
     try {
         const response = await axios(requestConfig);
@@ -27,18 +25,15 @@ module.exports = async (req, res) => {
     if (!user || !senha) return res.status(400).json({ error: 'RA e Senha são obrigatórios.' });
 
     try {
-        // Etapa 1: Login principal para obter Token A e dados básicos do usuário
         const loginResponse = await axios.post("https://sedintegracoes.educacao.sp.gov.br/credenciais/api/LoginCompletoToken", { user, senha }, { headers: { "Ocp-Apim-Subscription-Key": "2b03c1db3884488795f79c37c069381a" } });
         const tokenA = loginResponse.data.token;
         const userInfo = loginResponse.data.DadosUsuario;
         if (!tokenA || !userInfo) return res.status(401).json({ error: 'Credenciais inválidas.' });
 
-        // Etapa 2: Trocar Token A por Token B (x-api-key)
         const exchangeResponse = await axios.post("https://edusp-api.ip.tv/registration/edusp/token", { token: tokenA }, { headers: { "x-api-realm": "edusp", "x-api-platform": "webclient" } });
         const tokenB = exchangeResponse.data.auth_token;
         if (!tokenB) return res.status(500).json({ error: 'Falha ao obter token secundário.' });
         
-        // Etapa 3: Buscar as "salas" para descobrir os alvos de publicação
         const roomUserData = await fetchApiData({ method: 'get', url: 'https://edusp-api.ip.tv/room/user?list_all=true', headers: getEduspHeaders(tokenB) });
 
         let publicationTargetsQuery = '';
@@ -48,30 +43,30 @@ module.exports = async (req, res) => {
         }
 
         const codigoAluno = userInfo.CD_USUARIO;
+        const anoLetivo = new Date().getFullYear();
         
-        // Etapa 4: Buscar todos os dados restantes em paralelo
         const requests = [
-             fetchApiData({ // Faltas
+             fetchApiData({
                 method: 'get',
                 url: `https://sedintegracoes.educacao.sp.gov.br/apiboletim/api/Frequencia/GetFaltasBimestreAtual?codigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "a84380a41b144e0fa3d86cbc25027fe6" }
             }),
-            fetchApiData({ // Tarefas (is_essay=false)
+            fetchApiData({
                 method: 'get',
                 url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=true&limit=100&is_essay=false&${publicationTargetsQuery}`,
                 headers: getEduspHeaders(tokenB)
             }),
-            fetchApiData({ // Conquistas
+            fetchApiData({
                 method: 'get',
                 url: `https://sedintegracoes.educacao.sp.gov.br/apisalaconquistas/api/salaConquista/conquistaAluno?CodigoAluno=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "008ada07395f4045bc6e795d63718090" }
             }),
-            fetchApiData({ // Notificações
+            fetchApiData({
                 method: 'get',
                 url: `https://sedintegracoes.educacao.sp.gov.br/cmspwebservice/api/sala-do-futuro-alunos/consulta-notificacao?userId=${codigoAluno}`,
                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "1a758fd2f6be41448079c9616a861b91" }
             }),
-            fetchApiData({ // Redações (is_essay=true)
+            fetchApiData({
                 method: 'get',
                 url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=true&limit=100&is_essay=true&${publicationTargetsQuery}`,
                 headers: getEduspHeaders(tokenB)
@@ -80,7 +75,6 @@ module.exports = async (req, res) => {
 
         const [faltasData, tarefas, conquistas, notificacoes, redacoes] = await Promise.all(requests);
         
-        // CORREÇÃO FINAL: Nome da escola vindo das "salas"
         if(roomUserData?.rooms?.[0]?.meta?.nome_escola) {
             userInfo.NOME_ESCOLA = roomUserData.rooms[0].meta.nome_escola;
         }
@@ -100,4 +94,4 @@ module.exports = async (req, res) => {
         res.status(error.response?.status || 500).json({ error: 'RA ou Senha inválidos, ou falha na API.' });
     }
 };
-        
+            
