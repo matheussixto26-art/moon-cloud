@@ -43,7 +43,7 @@ module.exports = async (req, res) => {
         }
 
         const codigoAluno = userInfo.CD_USUARIO;
-        const anoLetivo = new Date().getFullYear();
+        const [raNumber, raDigit, raUf] = user.match(/^(\d+)(\d)(\w+)$/).slice(1);
         
         const requests = [
              fetchApiData({
@@ -70,13 +70,22 @@ module.exports = async (req, res) => {
                 method: 'get',
                 url: `https://edusp-api.ip.tv/tms/task/todo?expired_only=true&limit=100&is_essay=true&${publicationTargetsQuery}`,
                 headers: getEduspHeaders(tokenB)
+            }),
+             fetchApiData({
+                 method: 'get',
+                 url: `https://sedintegracoes.educacao.sp.gov.br/alunoapi/api/Aluno/ExibirAluno?inNumRA=${raNumber}&inDigitoRA=${raDigit}&inSiglaUFRA=${raUf}`,
+                 headers: { "Authorization": `Bearer ${tokenA}`, "Ocp-Apim-Subscription-Key": "b141f65a88354e078a9d4fdb1df29867" }
             })
         ];
 
-        const [faltasData, tarefas, conquistas, notificacoes, redacoes] = await Promise.all(requests);
+        const [faltasData, tarefas, conquistas, notificacoes, redacoes, dadosAluno] = await Promise.all(requests);
         
-        if(roomUserData?.rooms?.[0]?.meta?.nome_escola) {
+        if (dadosAluno?.aluno) {
+            userInfo.NOME_COMPLETO = dadosAluno.aluno.nome;
+        }
+        if (roomUserData?.rooms?.[0]?.meta) {
             userInfo.NOME_ESCOLA = roomUserData.rooms[0].meta.nome_escola;
+            userInfo.SALA = roomUserData.rooms[0].topic;
         }
 
         const dashboardData = {
