@@ -4,207 +4,158 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bests.IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-dark:#1E1E1E; --bg-medium:#2D2D2D; --border-color:#444; --text-primary:#FFFFFF; --text-secondary:#AAAAAA; --accent-color:#FF4136; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background-color:var(--bg-dark); color:var(--text-primary); font-family:'Poppins', sans-serif; }
+        .hidden { display:none!important; }
+
+        #login-screen { display:flex; justify-content:center; align-items:center; height:100vh; padding:15px; }
+        .login-container { background-color:var(--bg-medium); padding:30px; border-radius:10px; width:100%; max-width:400px; text-align:center; border:1px solid var(--border-color); }
+        .login-container h1 { margin-bottom:25px; color:var(--accent-color); }
+        .input-group input { width:100%; padding:14px; margin-bottom:15px; border:1px solid var(--border-color); border-radius:8px; background-color:var(--bg-dark); color:var(--text-primary); font-size:1em; }
+        .login-container button { width:100%; padding:14px; border:none; border-radius:8px; background-color:var(--accent-color); color:white; font-weight:600; cursor:pointer; }
+        #login-message-wrapper { margin-top:20px; min-height:22px; }
+        .save-login-wrapper { margin-top:15px; color:var(--text-secondary); }
+
+        #dashboard-screen { display:flex; flex-direction:column; height:100vh; }
+        .main-header { display:flex; align-items:center; padding:15px; background-color:var(--bg-medium); border-bottom:1px solid var(--border-color); }
+        #hamburger-btn { background:none; border:none; color:var(--text-primary); font-size:1.5em; cursor:pointer; margin-right:15px; }
+        .sidebar { position:fixed; top:0; left:-100%; width:250px; height:100%; background-color:var(--bg-medium); padding:20px; z-index:1001; transition:left 0.3s ease; border-right:1px solid var(--border-color); }
+        .sidebar.is-open { left:0; }
+        .main-content { flex-grow:1; padding:20px; overflow-y:auto; }
+        .main-info-card { background:var(--bg-medium); padding:20px; border-radius:8px; margin-bottom:20px; text-align:center; border: 1px solid var(--border-color); }
+        .main-info-card h2 { margin-bottom:5px; }
+        .main-info-card p { color:var(--text-secondary); }
+
+        .accordion-item { background:var(--bg-medium); border:1px solid var(--border-color); border-radius:8px; margin-bottom:10px; overflow:hidden; }
+        .accordion-header { padding:15px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+        .accordion-header span:last-child { font-weight:700; color: var(--accent-color); }
+        .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.3s ease-out; }
+        .accordion-item.active .accordion-content { max-height:1000px; }
+
+        .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1002; opacity:0; pointer-events:none; }
+        .modal-overlay.is-visible { opacity:1; pointer-events:all; }
+        .modal-content { background-color:var(--bg-medium); padding:20px; border-radius:8px; width:95%; max-width:700px; max-height:85vh; overflow-y:auto; }
+        .modal-close { float:right; background:none; border:none; font-size:1.5em; cursor:pointer; }
+        .list-item { list-style:none; padding:15px; border-top:1px solid var(--border-color); cursor: pointer; }
+        .list-item:hover { background-color:var(--bg-dark); }
+        .question { margin:20px 0; }
+        .question-option label { display:block; padding:10px; margin-bottom:8px; border-radius:5px; border:1px solid var(--border-color); }
+        #essay-result { margin-top:15px; background-color:var(--bg-dark); padding:10px; border-radius:5px; min-height:100px; white-space:pre-wrap; }
+        textarea { width:100%; min-height:100px; margin-bottom:10px; background-color: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; }
+    </style>
 </head>
 <body>
     <div id="login-screen">
-        <h1>Bests.IA</h1>
-        <form id="login-form">
-            <input type="text" id="ra" placeholder="RA com dígito e UF" required>
-            <input type="password" id="senha" placeholder="Senha da SED" required>
-            <button type="submit" id="login-button">Entrar</button>
-        </form>
-        <div id="login-message-wrapper">
-            <div id="login-message"></div>
-        </div>
-        <div>
-            <label><input type="checkbox" id="save-login-checkbox"> Salvar Login</label>
-        </div>
+        <div class="login-container"><h1>Bests.IA</h1><form id="login-form"><input type="text" id="ra" placeholder="RA com dígito e UF" required><input type="password" id="senha" placeholder="Senha da SED" required><button type="submit" id="login-button">Entrar</button></form><div id="login-message-wrapper"><div id="login-message"></div></div><div class="save-login-wrapper"><label><input type="checkbox" id="save-login-checkbox"> Salvar Login</label></div></div>
     </div>
-
     <div id="dashboard-screen" class="hidden">
-        <div id="welcome-modal-overlay" class="modal-overlay">
-            <div>
-                <h2 id="welcome-modal-title"></h2>
-                <p>Espero que goste da plataforma.</p>
-                <button id="welcome-modal-close-btn">Ok</button>
-            </div>
-        </div>
-        
-        <header>
-            <button id="hamburger-btn">☰</button>
-            <h1>Bests.IA</h1>
-        </header>
-        
-        <nav id="sidebar" class="sidebar">
-            <div id="user-profile">
-                <h2 id="student-name-sidebar"></h2>
-                <p id="school-name-sidebar"></p>
-            </div>
-        </nav>
-        
-        <main id="main-content">
-             <div>
-                 <h2 id="student-name"></h2>
-                 <p><span id="school-name"></span> - <span id="class-name"></span></p>
-             </div>
-             <div id="dashboard-accordion">
-                </div>
+        <div id="welcome-modal-overlay" class="modal-overlay"><div class="modal-content welcome-modal"><h2 id="welcome-modal-title"></h2><p>Espero que goste da plataforma.</p><button id="welcome-modal-close-btn">Ok</button></div></div>
+        <header class="main-header"><button id="hamburger-btn">☰</button><h1>Bests.IA</h1></header>
+        <nav id="sidebar" class="sidebar"><div id="user-profile"><h2 id="student-name-sidebar"></h2><p id="school-name-sidebar"></p></div></nav>
+        <main id="main-content" class="main-content">
+             <div class="main-info-card"><h2 id="student-name"></h2><p><span id="school-name"></span> - <span id="class-name"></span></p></div>
+             <div class="accordion" id="dashboard-accordion"></div>
         </main>
     </div>
-
-    <div id="viewer-modal" class="modal-overlay">
-        <div>
-            <button class="modal-close">&times;</button>
-            <h2 id="viewer-title"></h2>
-            <div id="viewer-content"></div>
-        </div>
-    </div>
-
-    <div id="task-solver-modal" class="modal-overlay">
-        <div>
-            <button class="modal-close">&times;</button>
-            <h2 id="task-solver-title"></h2>
-            <form id="task-form">
-                <div id="task-solver-content"></div>
-                <hr>
-                <button type="submit">Enviar Respostas</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="essay-helper-modal" class="modal-overlay">
-        <div>
-            <button class="modal-close">&times;</button>
-            <h2>Assistente de Redação IA</h2>
-            <p id="essay-theme"></p>
-            <textarea id="essay-prompt" placeholder="Descreva o que você quer que a IA escreva sobre o tema..."></textarea>
-            <button id="generate-essay-button">Gerar Redação</button>
-            <div id="essay-result"></div>
-        </div>
-    </div>
+    <div id="task-viewer-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2 id="task-viewer-title"></h2><form id="task-form"><div id="task-viewer-content"></div><hr><button type="submit">Enviar Respostas</button></form></div></div>
+    <div id="essay-helper-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2>Assistente de Redação IA</h2><div id="essay-viewer-content"></div><textarea id="essay-prompt" placeholder="Descreva o tema da redação aqui..."></textarea><button id="generate-essay-button">Gerar Redação</button><div id="essay-result"></div></div></div>
+    <div id="viewer-modal" class="modal-overlay"><div class="modal-content"><button class="modal-close">&times;</button><h2 id="viewer-title"></h2><div id="viewer-content" class="modal-list"></div></div></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             let fullData = {};
             const GEMINI_API_KEY = "AIzaSyBlB-LMuBI_TpDiKqCjO1zL-KeOjnexODQ";
-            
-            // Mapeamento de elementos do DOM
-            const ui = {
-                loginScreen: document.getElementById('login-screen'),
-                dashboardScreen: document.getElementById('dashboard-screen'),
-                loginForm: document.getElementById('login-form'),
-                loginButton: document.getElementById('login-button'),
-                loginMessage: document.getElementById('login-message'),
-                saveLoginCheckbox: document.getElementById('save-login-checkbox'),
-                raInput: document.getElementById('ra'),
-                senhaInput: document.getElementById('senha'),
-                welcomeModal: document.getElementById('welcome-modal-overlay'),
-                welcomeTitle: document.getElementById('welcome-modal-title'),
-                welcomeCloseBtn: document.getElementById('welcome-modal-close-btn'),
-                studentName: document.getElementById('student-name'),
-                studentNameSidebar: document.getElementById('student-name-sidebar'),
-                schoolName: document.getElementById('school-name'),
-                schoolNameSidebar: document.getElementById('school-name-sidebar'),
-                className: document.getElementById('class-name'),
-                accordion: document.getElementById('dashboard-accordion'),
-                hamburgerBtn: document.getElementById('hamburger-btn'),
-                sidebar: document.getElementById('sidebar'),
-            };
+            const loginScreen = document.getElementById('login-screen');
+            const dashboardScreen = document.getElementById('dashboard-screen');
+            const loginForm = document.getElementById('login-form');
+            const loginButton = document.getElementById('login-button');
+            const loginMessage = document.getElementById('login-message');
+            const saveLoginCheckbox = document.getElementById('save-login-checkbox');
 
             const performLogin = async (ra, senha) => {
-                ui.loginButton.disabled = true;
+                loginButton.disabled = true;
                 const messages = ['Verificando...', 'Acessando plataforma...', 'Carregando dados...'];
                 let msgIndex = 0;
-                ui.loginMessage.textContent = messages[msgIndex];
-                const interval = setInterval(() => { msgIndex = (msgIndex + 1) % messages.length; ui.loginMessage.textContent = messages[msgIndex]; }, 1200);
-
+                loginMessage.textContent = messages[msgIndex];
+                const interval = setInterval(() => { msgIndex = (msgIndex + 1) % messages.length; loginMessage.textContent = messages[msgIndex]; }, 1200);
                 try {
                     const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: ra, senha: senha }) });
                     const data = await response.json();
                     clearInterval(interval);
                     if (!response.ok) throw new Error(data.error);
-                    
-                    if (ui.saveLoginCheckbox.checked) {
-                        localStorage.setItem('savedCredentials', JSON.stringify({ ra, senha }));
-                    }
-                    
+                    if (saveLoginCheckbox.checked) localStorage.setItem('savedCredentials', JSON.stringify({ ra, senha }));
                     fullData = data;
                     showDashboard();
                 } catch (error) {
                     clearInterval(interval);
-                    ui.loginMessage.textContent = `❌ ${error.message}`;
+                    loginMessage.textContent = `❌ ${error.message}`;
                     localStorage.removeItem('savedCredentials');
                 } finally {
-                    ui.loginButton.disabled = false;
+                    loginButton.disabled = false;
                 }
             };
 
             const savedCreds = localStorage.getItem('savedCredentials');
             if (savedCreds) {
                 const { ra, senha } = JSON.parse(savedCreds);
-                ui.raInput.value = ra;
-                ui.senhaInput.value = senha;
-                ui.saveLoginCheckbox.checked = true;
+                document.getElementById('ra').value = ra;
+                document.getElementById('senha').value = senha;
+                saveLoginCheckbox.checked = true;
                 performLogin(ra, senha);
             }
 
-            ui.loginForm.addEventListener('submit', (e) => {
+            loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                if (!ui.saveLoginCheckbox.checked) localStorage.removeItem('savedCredentials');
-                performLogin(ui.raInput.value, ui.senhaInput.value);
+                if (!saveLoginCheckbox.checked) localStorage.removeItem('savedCredentials');
+                performLogin(document.getElementById('ra').value, document.getElementById('senha').value);
             });
 
             function showDashboard() {
                 populateDashboard();
                 setupEventListeners();
-                
-                const userName = fullData.userInfo?.NOME_COMPLETO || 'Aluno(a)';
-                ui.welcomeTitle.textContent = `Seja bem-vindo(a), ${userName.split(' ')[0]}!`;
-                ui.welcomeModal.style.display = 'flex'; // Mostra o modal de boas-vindas
-
-                ui.welcomeCloseBtn.onclick = () => {
-                    ui.welcomeModal.style.display = 'none';
-                    ui.loginScreen.classList.add('hidden');
-                    ui.dashboardScreen.classList.remove('hidden');
+                const welcomeModal = document.getElementById('welcome-modal-overlay');
+                const userName = fullData.userInfo?.NOME_COMPLETO || fullData.userInfo?.NAME || fullData.userInfo?.NOME || 'Aluno(a)';
+                document.getElementById('welcome-modal-title').textContent = `Seja bem-vindo(a), ${userName.split(' ')[0]}!`;
+                welcomeModal.classList.add('is-visible');
+                document.getElementById('welcome-modal-close-btn').onclick = () => {
+                    welcomeModal.classList.remove('is-visible');
+                    loginScreen.style.display = 'none';
+                    dashboardScreen.classList.remove('hidden');
                 };
             }
 
             function populateDashboard() {
                 const userName = fullData.userInfo?.NOME_COMPLETO || fullData.userInfo?.NAME || fullData.userInfo?.NOME || 'Aluno(a)';
-                ui.studentName.textContent = userName;
-                ui.studentNameSidebar.textContent = userName;
-                ui.schoolName.textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
-                ui.schoolNameSidebar.textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
-                ui.className.textContent = fullData.userInfo?.SALA || 'Sala não encontrada';
+                document.getElementById('student-name').textContent = userName;
+                document.getElementById('student-name-sidebar').textContent = userName;
+                document.getElementById('school-name').textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
+                document.getElementById('school-name-sidebar').textContent = fullData.userInfo?.NOME_ESCOLA || 'Escola não encontrada';
+                document.getElementById('class-name').textContent = fullData.userInfo?.SALA || 'Sala não encontrada';
                 
-                ui.accordion.innerHTML = ''; 
-
-                createAccordionItem('tarefas', 'Tarefas', (fullData.tarefas || []).filter(t => t.answer?.status !== 'submitted' && t.status !== 'expired').length);
+                const accordion = document.getElementById('dashboard-accordion');
+                accordion.innerHTML = ''; 
+                createAccordionItem('tarefas', 'Tarefas', (fullData.tarefas || []).length);
                 createAccordionItem('redacoes', 'Redações', (fullData.redacoes || []).length);
                 createAccordionItem('faltas', 'Faltas', (fullData.faltas || []).length);
                 createAccordionItem('conquistas', 'Conquistas', (fullData.conquistas || []).length);
                 createAccordionItem('notificacoes', 'Notificações', (fullData.notificacoes || []).length);
-                
-                setupAccordionListeners();
             }
             
             function createAccordionItem(id, title, count) {
+                const accordion = document.getElementById('dashboard-accordion');
                 const item = document.createElement('div');
                 item.className = 'accordion-item';
-                item.innerHTML = `
-                    <div class="accordion-header">
-                        <span>${title}</span>
-                        <span>${count}</span>
-                    </div>
-                    <div class="accordion-content">
-                        <div id="${id}-list"></div>
-                    </div>
-                `;
-                ui.accordion.appendChild(item);
-                
+                item.innerHTML = `<div class="accordion-header"><span>${title}</span><span>${count}</span></div><div class="accordion-content"><div class="modal-list" id="${id}-list"></div></div>`;
+                accordion.appendChild(item);
+                populateAccordionContent(id);
+            }
+            
+            function populateAccordionContent(id) {
                 const list = document.getElementById(`${id}-list`);
-                let content = '<div><p>Nenhuma informação encontrada.</p></div>';
-
+                let content = '<div class="list-item"><p>Nenhuma informação encontrada.</p></div>';
                 try {
                     switch(id) {
                         case 'faltas':
@@ -234,17 +185,11 @@
             function setupEventListeners() {
                 document.querySelectorAll('.accordion-header').forEach(header => header.addEventListener('click', () => header.parentElement.classList.toggle('active')));
                 document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => hideModal(btn.closest('.modal-overlay').id)));
-                ui.hamburgerBtn.addEventListener('click', () => ui.sidebar.classList.toggle('is-open'));
+                document.getElementById('hamburger-btn').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('is-open'));
             }
             
-            function hideModal(modalId) { 
-                const modal = document.getElementById(modalId);
-                if(modal) modal.style.display = 'none';
-            }
-            function showModal(modalId) {
-                const modal = document.getElementById(modalId);
-                if(modal) modal.style.display = 'flex';
-            }
+            function showModal(modalId) { if(document.getElementById(modalId)) document.getElementById(modalId).classList.add('is-visible'); }
+            function hideModal(modalId) { if(document.getElementById(modalId)) document.getElementById(modalId).classList.remove('is-visible'); }
             
             async function openTaskViewer(taskId, room, isEssay) {
                 const modalId = isEssay ? 'essay-helper-modal' : 'task-solver-modal';
@@ -272,7 +217,7 @@
             }
             
             function renderTaskQuestions(questions) {
-                document.getElementById('task-solver-content').innerHTML = questions.map(q => `<div class="question" data-q-id="${q.id}" data-q-type="${q.type}"><h4>${q.title}</h4>${q.options.map(opt => `<div><label><input type="${q.type === 'multi' ? 'checkbox' : 'radio'}" name="q-${q.id}" value="${opt.id}"> ${opt.title}</label></div>`).join('')}</div>`).join('');
+                document.getElementById('task-solver-content').innerHTML = questions.map(q => `<div class="question" data-q-id="${q.id}" data-q-type="${q.type}"><h4>${q.title}</h4>${q.options.map(opt => `<div class="question-option"><label><input type="${q.type === 'multi' ? 'checkbox' : 'radio'}" name="q-${q.id}" value="${opt.id}"> ${opt.title}</label></div>`).join('')}</div>`).join('');
             }
 
             async function submitTask(taskId, room) {
@@ -318,4 +263,5 @@
         });
     </script>
 </body>
-</html>
+    </html>
+    
