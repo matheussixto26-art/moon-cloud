@@ -45,4 +45,3 @@ module.exports = async (req, res) => {
         res.status(error.response?.status || 500).json({ error: `Falha na API de tarefa: ${type}` });
     }
 };
-                
