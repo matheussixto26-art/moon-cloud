@@ -7,23 +7,38 @@ module.exports = async (req, res) => {
 
     try {
         console.log("--- INICIANDO /api/get-essay-details ---");
-        const { tokenB, taskId } = req.body;
+        
+        // Agora pedimos mais informações do frontend
+        const { tokenB, taskId, answerId, publicationTarget } = req.body;
 
-        if (!tokenB || !taskId) {
-            return res.status(400).json({ error: 'TokenB e taskId são obrigatórios.' });
+        if (!tokenB || !taskId || !publicationTarget) {
+            return res.status(400).json({ error: 'TokenB, taskId e publicationTarget são obrigatórios.' });
         }
 
-        // Este é o endpoint que descobrimos para pegar todos os detalhes da tarefa
-        const apiUrl = `https://edusp-api.ip.tv/tms/task/${taskId}/apply/`;
+        // Montamos a URL base
+        const baseUrl = `https://edusp-api.ip.tv/tms/task/${taskId}/apply/`;
 
-        const response = await axios.get(apiUrl, {
+        // Adicionamos os parâmetros obrigatórios
+        const params = new URLSearchParams({
+            preview_mode: 'false',
+            room_name: publicationTarget
+        });
+
+        // O answerId é opcional, mas importante se a redação já começou
+        if (answerId) {
+            params.append('answer_id', answerId);
+        }
+        
+        const finalUrl = `${baseUrl}?${params.toString()}`;
+        console.log("URL Final para a API do Sala do Futuro:", finalUrl);
+
+        const response = await axios.get(finalUrl, {
             headers: {
                 "x-api-key": tokenB,
                 "Referer": "https://saladofuturo.educacao.sp.gov.br/"
             }
         });
 
-        // Retornamos apenas os dados que nos interessam
         const details = {
             taskContent: response.data.taskContent,
             supportText: response.data.supportText,
