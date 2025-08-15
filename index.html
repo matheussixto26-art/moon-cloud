@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagnóstico Inteligente - Detalhes da Redação</title>
+    <title>Diagnóstico Inteligente v2</title>
     <style>
         body { font-family: sans-serif; background-color: #1e1e1e; color: #e0e0e0; padding: 20px; }
         .container { max-width: 900px; margin: auto; background-color: #2c2c2c; padding: 25px; border-radius: 8px; }
         h1, h2 { text-align: center; color: #03dac6; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, textarea { width: 100%; padding: 10px; border: 1px solid #444; border-radius: 4px; background-color: #333; color: #e0e0e0; box-sizing: border-box; }
+        input { width: 100%; padding: 10px; border: 1px solid #444; border-radius: 4px; background-color: #333; color: #e0e0e0; box-sizing: border-box; }
         button { width: 100%; padding: 12px; border: none; border-radius: 4px; background-color: #03dac6; color: #121212; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         button:disabled { background-color: #555; cursor: not-allowed; }
         #status { text-align: center; margin-top: 15px; font-style: italic; min-height: 20px; }
@@ -20,53 +20,36 @@
 </head>
 <body>
     <div class="container">
-        <h1>Diagnóstico Inteligente</h1>
-
+        <h1>Diagnóstico Inteligente v2</h1>
         <div id="login-section">
-            <p><strong>Passo 1:</strong> Faça o login para obter o Token B automaticamente.</p>
+            <p><strong>Passo 1:</strong> Faça o login para obter o Token B.</p>
             <form id="loginForm">
-                <div class="form-group">
-                    <label for="ra">RA (com dígito e UF)</label>
-                    <input type="text" id="ra" required>
-                </div>
-                <div class="form-group">
-                    <label for="senha">Senha</label>
-                    <input type="password" id="senha" required>
-                </div>
-                <button type="submit" id="loginButton">Fazer Login e Preparar Teste</button>
+                <div class="form-group"><label for="ra">RA (com dígito e UF)</label><input type="text" id="ra" required></div>
+                <div class="form-group"><label for="senha">Senha</label><input type="password" id="senha" required></div>
+                <button type="submit" id="loginButton">Fazer Login</button>
             </form>
         </div>
-
         <div id="details-section">
-            <p><strong>Passo 2:</strong> Login OK! Token B obtido. Agora insira o ID da redação.</p>
-            <div class="form-group">
-                <label for="taskId">ID da Tarefa (ex: 72553233)</label>
-                <input type="text" id="taskId" placeholder="Cole o ID da Tarefa da redação aqui...">
-            </div>
+            <p><strong>Passo 2:</strong> Login OK! Agora preencha os dados da redação.</p>
+            <div class="form-group"><label for="taskId">ID da Tarefa (ex: 72553233)</label><input type="text" id="taskId" required></div>
+            <div class="form-group"><label for="answerId">ID da Resposta (answer_id)</label><input type="text" id="answerId" placeholder="Pode estar nulo ou vazio se nunca foi aberta" required></div>
+            <div class="form-group"><label for="publicationTarget">Alvo de Publicação (publication_target)</label><input type="text" id="publicationTarget" required></div>
             <button id="fetchDetailsButton">Buscar Detalhes da Redação</button>
         </div>
-        
         <p id="status"></p>
         <h2>Resposta do Servidor:</h2>
         <pre id="responseOutput">Aguardando busca...</pre>
     </div>
 
     <script>
-        let tokenB = null; // Variável para guardar o token
-
+        let tokenB = null;
         const loginForm = document.getElementById('loginForm');
-        const loginButton = document.getElementById('loginButton');
-        const detailsSection = document.getElementById('details-section');
         const fetchDetailsButton = document.getElementById('fetchDetailsButton');
-        const statusEl = document.getElementById('status');
-        const responseOutput = document.getElementById('responseOutput');
 
-        // LÓGICA DE LOGIN
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
+            const statusEl = document.getElementById('status');
             statusEl.textContent = 'Fazendo login... ⏳';
-            loginButton.disabled = true;
-
             try {
                 const response = await fetch('/api/login', {
                     method: 'POST',
@@ -74,58 +57,44 @@
                     body: JSON.stringify({ user: document.getElementById('ra').value, senha: document.getElementById('senha').value })
                 });
                 const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Erro no login.');
-                }
-
-                tokenB = data.tokenB; // Guarda o Token B!
-                statusEl.textContent = 'Login bem-sucedido! ✅ Token B armazenado.';
-                
-                // Esconde o login e mostra a parte de buscar detalhes
+                if (!response.ok) throw new Error(data.error);
+                tokenB = data.tokenB;
+                statusEl.innerHTML = `Login OK! ✅<br><strong>Para testar, procure uma redação na resposta abaixo e copie os dados dela.</strong>`;
                 document.getElementById('login-section').style.display = 'none';
-                detailsSection.style.display = 'block';
-
+                document.getElementById('details-section').style.display = 'block';
+                // Mostra a resposta completa do login para o usuário copiar os dados
+                document.getElementById('responseOutput').textContent = JSON.stringify(data, null, 2); 
             } catch (error) {
                 statusEl.textContent = `Falha no login: ${error.message} ❌`;
-            } finally {
-                loginButton.disabled = false;
             }
         });
 
-        // LÓGICA PARA BUSCAR OS DETALHES (usa o tokenB guardado)
         fetchDetailsButton.addEventListener('click', async () => {
             const taskId = document.getElementById('taskId').value;
+            const answerId = document.getElementById('answerId').value;
+            const publicationTarget = document.getElementById('publicationTarget').value;
+            const statusEl = document.getElementById('status');
+            const responseOutput = document.getElementById('responseOutput');
 
-            if (!tokenB || !taskId) {
-                statusEl.textContent = 'Erro: Ocorreu um problema com o Token B ou o ID da Tarefa está vazio.';
+            if (!tokenB || !taskId || !publicationTarget) {
+                statusEl.textContent = 'Erro: Preencha todos os campos.';
                 return;
             }
-
             statusEl.textContent = 'Buscando detalhes, aguarde... ⏳';
             responseOutput.textContent = '';
-            fetchDetailsButton.disabled = true;
-
+            
             try {
                 const response = await fetch('/api/get-essay-details', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tokenB, taskId })
+                    body: JSON.stringify({ tokenB, taskId, answerId, publicationTarget })
                 });
                 const data = await response.json();
-                if (!response.ok) {
-                    // Tenta mostrar mais detalhes do erro, se houver
-                    const errorDetails = data.details ? JSON.stringify(data.details, null, 2) : data.error;
-                    throw new Error(errorDetails || 'Erro desconhecido do servidor.');
-                }
-
-                statusEl.textContent = 'Sucesso! ✅ Resposta completa recebida do servidor:';
+                if (!response.ok) throw new Error(data.error || JSON.stringify(data.details));
+                statusEl.textContent = 'Sucesso! ✅ Resposta completa recebida:';
                 responseOutput.textContent = JSON.stringify(data, null, 2);
-
             } catch (error) {
                 statusEl.textContent = `Falha na requisição: ${error.message} ❌`;
-                responseOutput.textContent = `Ocorreu um erro. Verifique os logs da função "get-essay-details" no Vercel para mais detalhes.`;
-            } finally {
-                fetchDetailsButton.disabled = false;
             }
         });
     </script>
