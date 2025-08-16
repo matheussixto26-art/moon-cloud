@@ -119,12 +119,17 @@
                 const details = await res.json();
                 if (!res.ok) throw new Error(details.error || 'Não foi possível carregar os detalhes.');
                 
-                // FINALMENTE USANDO A ESTRUTURA CORRETA
-                selectedTask.details = details; 
-                statusEl.textContent = 'Proposta carregada! Clique para gerar com a IA.';
-                promptDisplay.style.display = 'block';
-                promptDisplay.innerHTML = `<h3>Proposta e Coletânea:</h3>${details.taskContent}`;
-                document.getElementById('generateEssayButton').disabled = false;
+                selectedTask.details = details;
+                const taskContent = details.taskContent;
+                
+                if (taskContent) {
+                    statusEl.textContent = 'Proposta carregada! Clique para gerar com a IA.';
+                    promptDisplay.style.display = 'block';
+                    promptDisplay.innerHTML = `<h3>Proposta e Coletânea:</h3>${taskContent}`;
+                    document.getElementById('generateEssayButton').disabled = false;
+                } else {
+                    statusEl.textContent = 'Erro: Proposta recebida, mas o formato é desconhecido.';
+                }
 
             } catch (err) {
                 statusEl.textContent = `Falha ao buscar detalhes: ${err.message}`;
@@ -155,11 +160,27 @@
             const essayText = document.getElementById('essayText').value;
             const statusEl = document.getElementById('submissionStatus');
             if (!selectedTask.id || !essayText.trim()) return;
+
+            // ===== A CORREÇÃO FINAL ESTÁ AQUI =====
+            // Busca a tarefa selecionada para pegar o título original dela
+            const taskData = essays.find(t => t.id == selectedTask.id);
+            const essayTitle = taskData ? taskData.title : "Redação Gerada por IA"; // Pega o título ou usa um padrão
+            // =====================================
+
             statusEl.textContent = 'Salvando rascunho... 🚀';
             const submitBtn = document.getElementById('submitEssayButton');
             submitBtn.disabled = true;
             try {
-                const res = await fetch('/api/submit-essay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tokenB, taskId: selectedTask.id, essayText, essayTitle: "" }) });
+                const res = await fetch('/api/submit-essay', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ 
+                        tokenB: tokenB, 
+                        taskId: selectedTask.id, 
+                        essayText: essayText, 
+                        essayTitle: essayTitle // <-- AGORA ENVIA O TÍTULO CORRETO
+                    }) 
+                });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.details?.message || data.error);
                 statusEl.textContent = 'Rascunho salvo com sucesso! 🎉';
