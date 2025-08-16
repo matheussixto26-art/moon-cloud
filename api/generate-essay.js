@@ -1,13 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// =================================================================
-// !!! ATENÇÃO: CÓDIGO DE TESTE COM CHAVE EXPOSTA !!!
-// ESTA É UMA MEDIDA DE DIAGNÓSTICO TEMPORÁRIA.
-// =================================================================
-const apiKey = "AIzaSyBlB-LMuBI_TpDiKqCjO1zL-KeOjnexODQ";
-const genAI = new GoogleGenerativeAI(apiKey);
-// =================================================================
-
+// Pega a chave da API da variável de ambiente do Vercel (MÉTODO SEGURO)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 function stripHtml(html){
   if (!html) return '';
@@ -19,8 +13,11 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: 'Método não permitido.' });
     }
 
-    // A CORREÇÃO ESTÁ AQUI: ADICIONEI A CHAVE { APÓS O 'TRY'
     try {
+        if (!process.env.GEMINI_API_KEY) {
+            throw new Error("A chave da API do Gemini não foi configurada no servidor.");
+        }
+        
         const { promptData } = req.body;
         if (!promptData || !promptData.taskContent) {
             return res.status(400).json({ error: 'Dados da proposta (promptData) são obrigatórios.' });
@@ -35,17 +32,14 @@ module.exports = async (req, res) => {
             Você é um especialista encarregado de criar uma redação modelo (gabarito) para um estudante do 7º ano do ensino fundamental no Brasil.
             Analise a proposta completa, incluindo a coletânea e as instruções sobre o gênero textual.
             Sua tarefa é gerar uma redação que siga TODAS as regras e se inspire nos textos de apoio.
-
             **PROPOSTA COMPLETA (PRÉVIA):**
             ---
             ${coletaneaEEnunciado}
             ---
-
             **INSTRUÇÕES DO GÊNERO:**
             ---
             ${focoNoGenero}
             ---
-
             **REDAÇÃO MODELO (GABARITO):**
             Com base em TUDO o que foi apresentado acima, escreva a redação.
             - Siga estritamente todas as regras do enunciado.
