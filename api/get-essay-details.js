@@ -6,31 +6,25 @@ module.exports = async (req, res) => {
     }
 
     try {
-        console.log("--- INICIANDO /api/get-essay-details ---");
+        console.log("--- INICIANDO /api/get-essay-details (MODO DETETIVE) ---");
         
-        // Agora pedimos mais informações do frontend
         const { tokenB, taskId, answerId, publicationTarget } = req.body;
 
         if (!tokenB || !taskId || !publicationTarget) {
             return res.status(400).json({ error: 'TokenB, taskId e publicationTarget são obrigatórios.' });
         }
 
-        // Montamos a URL base
         const baseUrl = `https://edusp-api.ip.tv/tms/task/${taskId}/apply/`;
-
-        // Adicionamos os parâmetros obrigatórios
         const params = new URLSearchParams({
             preview_mode: 'false',
             room_name: publicationTarget
         });
-
-        // O answerId é opcional, mas importante se a redação já começou
-        if (answerId) {
+        if (answerId && answerId !== 'null') {
             params.append('answer_id', answerId);
         }
         
         const finalUrl = `${baseUrl}?${params.toString()}`;
-        console.log("URL Final para a API do Sala do Futuro:", finalUrl);
+        console.log("URL Final:", finalUrl);
 
         const response = await axios.get(finalUrl, {
             headers: {
@@ -39,14 +33,9 @@ module.exports = async (req, res) => {
             }
         });
 
-        const details = {
-            taskContent: response.data.taskContent,
-            supportText: response.data.supportText,
-            assessedSkills: response.data.assessedSkills
-        };
-
-        console.log(`--- Detalhes da tarefa ${taskId} obtidos com sucesso ---`);
-        res.status(200).json(details);
+        // MUDANÇA PRINCIPAL: Retornamos a resposta COMPLETA, sem filtrar nada.
+        console.log("RESPOSTA BRUTA RECEBIDA DO SERVIDOR:", JSON.stringify(response.data));
+        res.status(200).json(response.data);
 
     } catch (error) {
         const errorData = error.response?.data;
