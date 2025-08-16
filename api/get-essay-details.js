@@ -6,6 +6,8 @@ module.exports = async (req, res) => {
     }
 
     try {
+        console.log("--- INICIANDO /api/get-essay-details (MODO DETETIVE) ---");
+        
         const { tokenB, taskId, answerId, publicationTarget } = req.body;
 
         if (!tokenB || !taskId || !publicationTarget) {
@@ -18,12 +20,13 @@ module.exports = async (req, res) => {
             room_name: publicationTarget
         });
         
-        // Lógica mais segura: só adiciona o answer_id se ele existir e não for nulo
+        // Lógica mais segura: só adiciona o answer_id se ele existir e não for nulo/vazio
         if (answerId) {
             params.append('answer_id', answerId);
         }
         
         const finalUrl = `${baseUrl}?${params.toString()}`;
+        console.log("URL Final para a API do Sala do Futuro:", finalUrl);
 
         const response = await axios.get(finalUrl, {
             headers: {
@@ -32,6 +35,8 @@ module.exports = async (req, res) => {
             }
         });
 
+        // MUDANÇA PRINCIPAL: Retornamos a resposta COMPLETA, sem filtrar nada.
+        console.log("RESPOSTA BRUTA RECEBIDA DO SERVIDOR:", JSON.stringify(response.data));
         res.status(200).json(response.data);
 
     } catch (error) {
