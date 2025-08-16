@@ -3,54 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teste Final de Envio - Sala do Futuro</title>
+    <title>Automatizador IA PRO - Sala do Futuro</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; box-sizing: border-box; }
         .container { width: 100%; max-width: 800px; margin: auto; background-color: #1e1e1e; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); }
-        h1, h2 { text-align: center; color: #ffab00; margin-top: 0; }
+        h1, h2 { text-align: center; color: #bb86fc; margin-top: 0; }
         button { width: 100%; padding: 12px; border: none; border-radius: 4px; background-color: #bb86fc; color: #121212; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; margin-top: 10px; }
         button:disabled { background-color: #555; cursor: not-allowed; }
-        .button-confirm { background-color: #ffab00; }
-        input, textarea { width: 100%; padding: 10px; border: 1px solid #444; border-radius: 4px; background-color: #333; color: #e0e0e0; box-sizing: border-box; margin-bottom: 10px;}
-        p.status { text-align: center; margin-top: 15px; font-style: italic; min-height: 20px; font-weight: bold; }
+        .button-secondary { background-color: #03dac6; }
+        input { width: 100%; padding: 10px; border: 1px solid #444; border-radius: 4px; background-color: #333; color: #e0e0e0; box-sizing: border-box; margin-bottom: 10px;}
+        #status, #submissionStatus { text-align: center; margin-top: 15px; font-style: italic; min-height: 20px; }
         #essay-section { display: none; margin-top: 30px; border-top: 1px solid #444; padding-top: 20px; }
         #essayList { list-style: none; padding: 0; }
-        #essayList li { background-color: #2c2c2c; padding: 10px 15px; margin-bottom: 5px; border-radius: 4px; cursor: pointer; border-left: 4px solid #bb86fc; }
-        #essayList li.selected { background-color: #bb86fc; color: #121212; }
+        #essayList li { background-color: #2c2c2c; padding: 10px 15px; margin-bottom: 5px; border-radius: 4px; cursor: pointer; border-left: 4px solid #bb86fc; transition: background-color 0.2s; }
+        #essayList li.selected { background-color: #bb86fc; color: #121212; font-weight: bold; }
+        #prompt-display { margin-top: 20px; padding: 15px; background-color: #2c2c2c; border-radius: 4px; border: 1px solid #444; max-height: 300px; overflow-y: auto; display: none; }
+        #prompt-display a { color: #8ab4f8; }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="login-section">
-            <h1>Teste Final de Envio</h1>
+            <h1>Automatizador IA PRO</h1>
             <form id="loginForm">
                 <div class="form-group"><label for="ra">RA (com dígito e UF)</label><input type="text" id="ra" name="user" required></div>
                 <div class="form-group"><label for="senha">Senha</label><input type="password" id="senha" name="senha" required></div>
-                <button type="submit" id="loginButton">1. Conectar</button>
+                <button type="submit" id="loginButton">Conectar</button>
             </form>
-            <p id="loginStatus" class="status"></p>
+            <p id="status"></p>
         </div>
 
         <div id="essay-section">
-            <h2>2. Selecione a Redação</h2>
+            <h2>Selecione uma Redação Válida</h2>
             <ul id="essayList"></ul>
+            <div id="prompt-display"></div>
             <div class="form-group">
-                <label for="essayText" style="margin-top: 15px;">3. Digite o texto para salvar:</label>
-                <textarea id="essayText" placeholder="Digite algo como 'TESTE 123' para verificar..." style="min-height: 150px;"></textarea>
+                <label for="essayText" style="margin-top: 15px;">Texto da Redação:</label>
+                <textarea id="essayText" placeholder="Selecione uma redação para ver a proposta e gerar o texto..." style="min-height: 250px;"></textarea>
             </div>
-            <button id="submitEssayButton" class="button-confirm" disabled>4. Salvar Rascunho de Teste</button>
-            <p id="submissionStatus" class="status"></p>
+            <button id="generateEssayButton" class="button-secondary" disabled>Gerar Redação com IA 🤖</button>
+            <button id="submitEssayButton" disabled>Salvar Redação como Rascunho</button>
+            <p id="submissionStatus"></p>
         </div>
     </div>
 
     <script>
         let tokenB = null;
         let essays = [];
-        let selectedTaskId = null;
+        let selectedTask = { id: null, details: null };
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const statusEl = document.getElementById('loginStatus');
+            const statusEl = document.getElementById('status');
             statusEl.textContent = 'Conectando...';
             try {
                 const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: e.target.user.value, senha: e.target.senha.value }) });
@@ -68,48 +72,106 @@
         function displayEssays() {
             const essaySection = document.getElementById('essay-section');
             const essayList = document.getElementById('essayList');
-            const submitButton = document.getElementById('submitEssayButton');
-            const pendingEssays = essays.filter(t => t.is_essay === true && t.answer_status !== 'pending');
+            
+            // A CORREÇÃO ESTÁ AQUI: Filtra tarefas expiradas e as que ainda não foram publicadas.
+            const now = new Date();
+            const availableEssays = essays.filter(t => 
+                t.is_essay === true && 
+                t.answer_status !== 'pending' &&
+                new Date(t.publish_at) <= now && 
+                new Date(t.expire_at) > now
+            );
             
             essaySection.style.display = 'block';
-            if (pendingEssays.length === 0) {
-                essayList.innerHTML = '<li>Nenhuma redação pendente encontrada.</li>';
+            if (availableEssays.length === 0) {
+                essayList.innerHTML = '<li>Nenhuma redação válida (não expirada) encontrada.</li>';
                 return;
             }
-            essayList.innerHTML = pendingEssays.map(essay => `<li data-task-id="${essay.id}">${essay.title}</li>`).join('');
-            document.querySelectorAll('#essayList li').forEach(li => li.addEventListener('click', (event) => {
-                document.querySelectorAll('#essayList li').forEach(item => item.classList.remove('selected'));
-                event.currentTarget.classList.add('selected');
-                selectedTaskId = event.currentTarget.dataset.taskId;
-                submitButton.disabled = false; // Habilita o botão de envio
-            }));
+            essayList.innerHTML = availableEssays.map(essay => `<li data-task-id="${essay.id}">${essay.title}</li>`).join('');
+            document.querySelectorAll('#essayList li').forEach(li => li.addEventListener('click', handleEssaySelection));
         }
+
+        async function handleEssaySelection(event) {
+            const li = event.currentTarget;
+            const taskId = li.dataset.taskId;
+            document.querySelectorAll('#essayList li').forEach(item => item.classList.remove('selected'));
+            li.classList.add('selected');
+
+            const taskData = essays.find(t => t.id == taskId);
+            if (!taskData) { alert('Erro: dados da tarefa não encontrados.'); return; }
+
+            const answerId = taskData.answer_id;
+            const publicationTarget = taskData.publication_target;
+
+            selectedTask = { id: taskId, details: null };
+            document.getElementById('generateEssayButton').disabled = true;
+            document.getElementById('submitEssayButton').disabled = true;
+            const statusEl = document.getElementById('submissionStatus');
+            const promptDisplay = document.getElementById('prompt-display');
+            
+            promptDisplay.style.display = 'none';
+            statusEl.textContent = 'Buscando proposta completa... 📚';
+
+            try {
+                const res = await fetch('/api/get-essay-details', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ tokenB, taskId, answerId, publicationTarget }) 
+                });
+                const details = await res.json();
+                if (!res.ok) throw new Error(details.error || 'Não foi possível carregar os detalhes.');
+                
+                selectedTask.details = details;
+                
+                const taskContent = details.taskContent || (details.task ? details.task.taskContent : undefined);
+                
+                if (taskContent) {
+                    statusEl.textContent = 'Proposta carregada! Clique para gerar com a IA.';
+                    promptDisplay.style.display = 'block';
+                    promptDisplay.innerHTML = `<h3>Proposta e Coletânea:</h3>${taskContent}`;
+                    document.getElementById('generateEssayButton').disabled = false;
+                } else {
+                    statusEl.textContent = 'Erro: Proposta recebida, mas o formato é desconhecido.';
+                    console.error("Resposta recebida sem taskContent:", details);
+                }
+
+            } catch (err) {
+                statusEl.textContent = `Falha ao buscar detalhes: ${err.message}`;
+            }
+        }
+
+        document.getElementById('generateEssayButton').addEventListener('click', async () => {
+             if (!selectedTask.id || !selectedTask.details) return;
+            const statusEl = document.getElementById('submissionStatus');
+            const genButton = document.getElementById('generateEssayButton');
+            statusEl.textContent = 'IA escrevendo... 🤖⏳';
+            genButton.disabled = true;
+            try {
+                const res = await fetch('/api/generate-essay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ promptData: selectedTask.details }) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.details || data.error);
+                document.getElementById('essayText').value = data.essay;
+                statusEl.textContent = 'Texto gerado! Revise e envie. ✅';
+                document.getElementById('submitEssayButton').disabled = false;
+            } catch (err) {
+                statusEl.textContent = `Erro da IA: ${err.message} ❌`;
+            } finally {
+                genButton.disabled = false;
+            }
+        });
 
         document.getElementById('submitEssayButton').addEventListener('click', async () => {
             const essayText = document.getElementById('essayText').value;
             const statusEl = document.getElementById('submissionStatus');
-            if (!selectedTaskId || !essayText.trim()) {
-                statusEl.textContent = "Selecione uma redação e digite um texto.";
-                return;
-            }
-
-            statusEl.textContent = 'Salvando rascunho de teste... 🚀';
+            if (!selectedTask.id || !essayText.trim()) return;
+            statusEl.textContent = 'Salvando rascunho... 🚀';
             const submitBtn = document.getElementById('submitEssayButton');
             submitBtn.disabled = true;
             try {
-                const res = await fetch('/api/submit-essay', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ 
-                        tokenB: tokenB, 
-                        taskId: selectedTaskId, 
-                        essayText: essayText, 
-                        essayTitle: "Teste de Envio" // Título de teste
-                    }) 
-                });
+                const res = await fetch('/api/submit-essay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tokenB, taskId: selectedTask.id, essayText, essayTitle: "" }) });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.details?.message || data.error);
-                statusEl.textContent = 'Rascunho salvo com sucesso! 🎉 Verifique no site oficial.';
+                statusEl.textContent = 'Rascunho salvo com sucesso! 🎉';
             } catch (err) {
                 statusEl.textContent = `Falha ao salvar: ${err.message} ❌`;
             } finally {
