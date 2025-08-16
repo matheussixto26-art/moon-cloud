@@ -31,14 +31,8 @@ module.exports = async (req, res) => {
             }
         });
 
-        // Filtra e retorna apenas os dados que vamos usar
-        const details = {
-            taskContent: response.data.taskContent,
-            supportText: response.data.supportText,
-            questions: response.data.questions
-        };
-
-        res.status(200).json(details);
+        // Simplesmente retorna a resposta COMPLETA e bruta do servidor
+        res.status(200).json(response.data);
 
     } catch (error) {
         const errorData = error.response?.data;
