@@ -1,9 +1,11 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
+// Pega a chave da API da variável de ambiente que configuramos no Vercel
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Função para limpar o HTML e extrair só o texto puro
 function stripHtml(html){
+  if (!html) return '';
   return html.replace(/<[^>]*>?/gm, ' ').replace(/\s\s+/g, ' ').trim();
 }
 
@@ -13,48 +15,45 @@ module.exports = async (req, res) => {
     }
 
     try {
-        console.log("--- INICIANDO /api/generate-essay (VERSÃO TURBINADA) ---");
-
-        // Agora recebemos o objeto completo com os detalhes
+        if (!process.env.GEMINI_API_KEY) {
+            throw new Error("A chave da API do Gemini não foi configurada no servidor.");
+        }
+        
         const { promptData } = req.body;
         if (!promptData || !promptData.taskContent) {
             return res.status(400).json({ error: 'Dados da proposta (promptData) são obrigatórios.' });
         }
         
-        // Limpamos o HTML para mandar só texto para a IA
         const coletaneaEEnunciado = stripHtml(promptData.taskContent);
         const focoNoGenero = stripHtml(promptData.supportText);
 
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
-        // Prompt muito mais detalhado para a IA
         const fullPrompt = `
-            Você é um estudante do 7º ano do ensino fundamental no Brasil, muito dedicado e criativo. Sua tarefa é escrever uma redação impecável seguindo estritamente as instruções e os textos de apoio fornecidos.
+            Você é um especialista encarregado de criar uma redação modelo (gabarito) para um estudante do 7º ano do ensino fundamental no Brasil.
+            Analise a proposta completa, incluindo a coletânea e as instruções sobre o gênero textual.
+            Sua tarefa é gerar uma redação que siga TODAS as regras e se inspire nos textos de apoio.
 
-            **INSTRUÇÕES E TEXTOS DE APOIO (COLETÂNEA):**
+            **PROPOSTA COMPLETA (PRÉVIA):**
             ---
             ${coletaneaEEnunciado}
             ---
 
-            **REGRAS E DICAS SOBRE O GÊNERO TEXTUAL:**
+            **INSTRUÇÕES DO GÊNERO:**
             ---
             ${focoNoGenero}
             ---
 
-            **SUA TAREFA:**
-            Com base em TUDO o que foi apresentado acima, escreva a redação solicitada.
-            - Siga todas as regras do enunciado (personagens, local, contratempo, etc.).
-            - Use a terceira pessoa.
-            - Mantenha a linguagem de um jovem de 12-13 anos, mas seguindo a norma culta do português.
-            - Estruture o texto em parágrafos claros (introdução, desenvolvimento e conclusão).
-            - Não escreva nada além da redação em si. Sem títulos, sem "Introdução:", apenas o texto corrido.
+            **REDAÇÃO MODELO (GABARITO):**
+            Com base em TUDO o que foi apresentado acima, escreva a redação.
+            - Siga estritamente todas as regras do enunciado.
+            - Mantenha a linguagem apropriada para um jovem de 12-13 anos, mas com excelente gramática e estrutura.
+            - O texto deve ser escrito em parágrafos claros, sem títulos como "Introdução".
         `;
-
+        
         const result = await model.generateContent(fullPrompt);
-        const response = result.response;
-        const essayText = response.text();
+        const essayText = result.response.text();
 
-        console.log("--- FIM /api/generate-essay: Redação de alta qualidade gerada! ---");
         res.status(200).json({ success: true, essay: essayText });
 
     } catch (error) {
