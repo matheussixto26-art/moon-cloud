@@ -3,8 +3,6 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 // =================================================================
 // !!! ATENÇÃO: CÓDIGO DE TESTE COM CHAVE EXPOSTA !!!
 // ESTA É UMA MEDIDA DE DIAGNÓSTICO TEMPORÁRIA.
-// NÃO DEIXE ESTE CÓDIGO EM PRODUÇÃO OU EM UM GITHUB PÚBLICO.
-// APÓS O TESTE, VOLTE PARA A VERSÃO SEGURA.
 // =================================================================
 const apiKey = "AIzaSyBlB-LMuBI_TpDiKqCjO1zL-KeOjnexODQ";
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -21,7 +19,8 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: 'Método não permitido.' });
     }
 
-    try        
+    // A CORREÇÃO ESTÁ AQUI: ADICIONEI A CHAVE { APÓS O 'TRY'
+    try {
         const { promptData } = req.body;
         if (!promptData || !promptData.taskContent) {
             return res.status(400).json({ error: 'Dados da proposta (promptData) são obrigatórios.' });
