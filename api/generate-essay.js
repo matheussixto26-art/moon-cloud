@@ -1,9 +1,20 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Pega a chave da API da variável de ambiente que configuramos no Vercel
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// ##################################################################
+// # !!! COLE SUA CHAVE DA API DO GEMINI AQUI DENTRO DAS ASPAS !!!   #
+// ##################################################################
+const apiKey = "[AIzaSyBlB-LMuBI_TpDiKqCjO1zL-KeOjnexODQ]"; 
+// CUIDADO: Se seu repositório no GitHub for público, a chave ficará visível!
+// ##################################################################
 
-// Função para limpar o HTML e extrair só o texto puro
+
+// Verificação para garantir que a chave foi inserida
+if (!apiKey || apiKey === "[COLE_SUA_CHAVE_API_AQUI]") {
+    throw new Error("A chave da API do Gemini não foi inserida no código. Edite o arquivo api/generate-essay.js.");
+}
+
+const genAI = new GoogleGenerativeAI(apiKey);
+
 function stripHtml(html){
   if (!html) return '';
   return html.replace(/<[^>]*>?/gm, ' ').replace(/\s\s+/g, ' ').trim();
@@ -15,10 +26,6 @@ module.exports = async (req, res) => {
     }
 
     try {
-        if (!process.env.GEMINI_API_KEY) {
-            throw new Error("A chave da API do Gemini não foi configurada no servidor.");
-        }
-        
         const { promptData } = req.body;
         if (!promptData || !promptData.taskContent) {
             return res.status(400).json({ error: 'Dados da proposta (promptData) são obrigatórios.' });
