@@ -1,19 +1,15 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// ##################################################################
-// # !!! COLE SUA CHAVE DA API DO GEMINI AQUI DENTRO DAS ASPAS !!!   #
-// ##################################################################
-const apiKey = "[AIzaSyBlB-LMuBI_TpDiKqCjO1zL-KeOjnexODQ]"; 
-// CUIDADO: Se seu repositório no GitHub for público, a chave ficará visível!
-// ##################################################################
-
-
-// Verificação para garantir que a chave foi inserida
-if (!apiKey || apiKey === "[COLE_SUA_CHAVE_API_AQUI]") {
-    throw new Error("A chave da API do Gemini não foi inserida no código. Edite o arquivo api/generate-essay.js.");
-}
-
+// =================================================================
+// !!! ATENÇÃO: CÓDIGO DE TESTE COM CHAVE EXPOSTA !!!
+// ESTA É UMA MEDIDA DE DIAGNÓSTICO TEMPORÁRIA.
+// NÃO DEIXE ESTE CÓDIGO EM PRODUÇÃO OU EM UM GITHUB PÚBLICO.
+// APÓS O TESTE, VOLTE PARA A VERSÃO SEGURA.
+// =================================================================
+const apiKey = "AIzaSyBlB-LMuBI_TpDiKqCjO1zL-KeOjnexODQ";
 const genAI = new GoogleGenerativeAI(apiKey);
+// =================================================================
+
 
 function stripHtml(html){
   if (!html) return '';
@@ -25,7 +21,7 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: 'Método não permitido.' });
     }
 
-    try {
+    try        
         const { promptData } = req.body;
         if (!promptData || !promptData.taskContent) {
             return res.status(400).json({ error: 'Dados da proposta (promptData) são obrigatórios.' });
