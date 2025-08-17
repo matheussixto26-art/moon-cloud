@@ -3,58 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automatizador IA PRO - Sala do Futuro</title>
+    <title>HyperReda V1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; box-sizing: border-box; }
-        .container { width: 100%; max-width: 800px; margin: auto; background-color: #1e1e1e; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); }
-        h1, h2 { text-align: center; color: #bb86fc; margin-top: 0; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 4px; background-color: #bb86fc; color: #121212; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; margin-top: 10px; }
-        button:disabled { background-color: #555; cursor: not-allowed; }
-        .button-secondary { background-color: #03dac6; }
-        input { width: 100%; padding: 10px; border: 1px solid #444; border-radius: 4px; background-color: #333; color: #e0e0e0; box-sizing: border-box; margin-bottom: 10px;}
-        #status, #submissionStatus { text-align: center; margin-top: 15px; font-style: italic; min-height: 20px; }
-        #essay-section { display: none; margin-top: 30px; border-top: 1px solid #444; padding-top: 20px; }
-        #essayList { list-style: none; padding: 0; }
-        #essayList li { background-color: #2c2c2c; padding: 10px 15px; margin-bottom: 5px; border-radius: 4px; cursor: pointer; border-left: 4px solid #bb86fc; transition: background-color 0.2s; }
-        #essayList li.selected { background-color: #bb86fc; color: #121212; font-weight: bold; }
-        #prompt-display { margin-top: 20px; padding: 15px; background-color: #2c2c2c; border-radius: 4px; border: 1px solid #444; max-height: 300px; overflow-y: auto; display: none; }
+        :root {
+            --bg-color: #2E2238;
+            --card-color: #4C3A54;
+            --input-color: #3B2C42;
+            --primary-text: #EAE0F0;
+            --secondary-text: #C8A2C8;
+            --accent-color: #D8BFD8;
+            --button-text: #2E2238;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--card-color);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            text-align: center;
+            margin: 0 0 5px 0;
+        }
+        
+        h2 {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--secondary-text);
+            text-align: center;
+            margin: 0 0 25px 0;
+            border-bottom: 1px solid var(--input-color);
+            padding-bottom: 25px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            color: var(--secondary-text);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--input-color);
+            border-radius: 8px;
+            background-color: var(--input-color);
+            color: var(--primary-text);
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--accent-color);
+            color: var(--button-text);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-top: 15px;
+        }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            color: #888;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #E6D2E6;
+        }
+        
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        p.status { text-align: center; margin-top: 20px; font-style: italic; min-height: 20px; color: var(--secondary-text); }
+        
+        #essay-section { display: none; }
+        
+        #essayList { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; }
+        
+        #essayList li {
+            background-color: var(--input-color);
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        #essayList li.selected {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        
+        #generated-title-display {
+            color: var(--accent-color);
+            font-style: italic;
+            min-height: 24px;
+            font-size: 1rem;
+            margin: 15px 0 5px 0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="login-section">
-            <h1>Automatizador IA PRO</h1>
+            <h1>HyperReda V1</h1>
+            <h2>para Sala do Futuro</h2>
             <form id="loginForm">
-                <div class="form-group"><label for="ra">RA (com dígito e UF)</label><input type="text" id="ra" name="user" required></div>
-                <div class="form-group"><label for="senha">Senha</label><input type="password" id="senha" name="senha" required></div>
+                <div class="form-group">
+                    <label for="ra">RA + dígito + sp</label>
+                    <input type="text" id="ra" name="user" placeholder="ex: 000123456789sp" required>
+                </div>
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" name="senha" placeholder="Sua senha da SED" required>
+                </div>
                 <button type="submit" id="loginButton">Conectar</button>
             </form>
-            <p id="status"></p>
+            <p id="status" class="status"></p>
         </div>
 
         <div id="essay-section">
-            <h2>Selecione uma Redação Válida</h2>
+            <h2>Selecione a Redação</h2>
             <ul id="essayList"></ul>
-            <div id="prompt-display"></div>
-            <div class="form-group">
-                <label for="essayText" style="margin-top: 15px;">Texto da Redação:</label>
-                <textarea id="essayText" placeholder="Selecione uma redação para ver a proposta e gerar o texto..." style="min-height: 250px;"></textarea>
-            </div>
-            <button id="generateEssayButton" class="button-secondary" disabled>Gerar Redação com IA 🤖</button>
-            <button id="submitEssayButton" disabled>Salvar Redação como Rascunho</button>
-            <p id="submissionStatus"></p>
+            <h4 id="generated-title-display"></h4>
+            <textarea id="essayText" placeholder="O texto da IA aparecerá aqui..." style="min-height: 200px;"></textarea>
+            <button id="generateEssayButton" disabled>Gerar Redação com IA 🤖</button>
+            <button id="submitEssayButton" disabled>Salvar Rascunho</button>
+            <p id="submissionStatus" class="status"></p>
         </div>
     </div>
 
     <script>
         let tokenB = null;
         let essays = [];
-        let selectedTask = { id: null, details: null, fullData: null };
+        let selectedTask = { id: null, details: null, fullData: null, generatedTitle: null };
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const statusEl = document.getElementById('status');
+            const loginButton = document.getElementById('loginButton');
             statusEl.textContent = 'Conectando...';
+            loginButton.disabled = true;
             try {
                 const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: e.target.user.value, senha: e.target.senha.value }) });
                 const data = await res.json();
@@ -65,7 +194,11 @@
                 
                 document.getElementById('login-section').style.display = 'none';
                 displayEssays();
-            } catch (err) { statusEl.textContent = `Falha: ${err.message}`; }
+            } catch (err) { 
+                statusEl.textContent = `Falha: ${err.message}`; 
+            } finally {
+                loginButton.disabled = false;
+            }
         });
 
         function displayEssays() {
@@ -74,7 +207,7 @@
             const now = new Date();
             const availableEssays = essays.filter(t => 
                 t.is_essay === true &&
-                t.answer_id !== null && // Apenas redações que já foram iniciadas (têm um rascunho)
+                t.answer_id !== null && 
                 t.answer_status !== 'pending' &&
                 new Date(t.publish_at) <= now && 
                 new Date(t.expire_at) > now
@@ -98,7 +231,11 @@
             const taskData = essays.find(t => t.id == taskId);
             if (!taskData) { alert('Erro: dados da tarefa não encontrados.'); return; }
 
-            selectedTask.fullData = taskData; // Salva todos os dados da tarefa
+            selectedTask = { id: taskId, details: null, fullData: taskData, generatedTitle: null };
+            document.getElementById('generateEssayButton').disabled = true;
+            document.getElementById('submitEssayButton').disabled = true;
+            document.getElementById('generated-title-display').textContent = '';
+            document.getElementById('essayText').value = '';
 
             const statusEl = document.getElementById('submissionStatus');
             statusEl.textContent = 'Buscando proposta completa... 📚';
@@ -112,11 +249,8 @@
                 const details = await res.json();
                 if (!res.ok) throw new Error(details.error || 'Não foi possível carregar os detalhes.');
                 
-                selectedTask.id = taskId;
-                selectedTask.details = details; 
-                
-                document.getElementById('prompt-display').innerHTML = `<h3>Proposta e Coletânea:</h3>${details.taskContent}`;
-                statusEl.textContent = 'Proposta carregada! Clique para gerar com a IA.';
+                selectedTask.details = details;
+                statusEl.textContent = 'Proposta carregada! Clique para gerar.';
                 document.getElementById('generateEssayButton').disabled = false;
             } catch (err) {
                 statusEl.textContent = `Falha ao buscar detalhes: ${err.message}`;
@@ -126,28 +260,35 @@
         document.getElementById('generateEssayButton').addEventListener('click', async () => {
              if (!selectedTask.id || !selectedTask.details) return;
             const statusEl = document.getElementById('submissionStatus');
-            statusEl.textContent = 'IA escrevendo... 🤖⏳';
+            const genButton = document.getElementById('generateEssayButton');
+            statusEl.textContent = 'IA escrevendo redação e título... 🤖⏳';
+            genButton.disabled = true;
             try {
                 const res = await fetch('/api/generate-essay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ promptData: selectedTask.details }) });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.details || data.error);
-                document.getElementById('essayText').value = data.essay;
-                statusEl.textContent = 'Texto gerado! Revise e envie. ✅';
+
+                selectedTask.generatedTitle = data.essayTitle;
+                document.getElementById('essayText').value = data.essayBody;
+                document.getElementById('generated-title-display').textContent = `"${data.essayTitle}"`;
+                
+                statusEl.textContent = 'Texto e título gerados! ✅';
                 document.getElementById('submitEssayButton').disabled = false;
             } catch (err) {
                 statusEl.textContent = `Erro da IA: ${err.message} ❌`;
+            } finally {
+                genButton.disabled = false;
             }
         });
 
         document.getElementById('submitEssayButton').addEventListener('click', async () => {
             const essayText = document.getElementById('essayText').value;
             const statusEl = document.getElementById('submissionStatus');
-            if (!selectedTask.id || !essayText.trim() || !selectedTask.details?.questionId) {
-                statusEl.textContent = 'Erro: dados da tarefa ou da questão ausentes.';
-                return;
-            }
-
-            statusEl.textContent = 'Salvando rascunho (método final)... 🚀';
+            if (!selectedTask.id || !essayText.trim()) return;
+            
+            statusEl.textContent = 'Salvando rascunho... 🚀';
+            const submitBtn = document.getElementById('submitEssayButton');
+            submitBtn.disabled = true;
             try {
                 const res = await fetch('/api/submit-essay', { 
                     method: 'POST', 
@@ -158,15 +299,17 @@
                         answerId: selectedTask.fullData.answer_id,
                         questionId: selectedTask.details.questionId,
                         essayText: essayText, 
-                        essayTitle: selectedTask.fullData.title,
+                        essayTitle: selectedTask.generatedTitle,
                         executedOn: selectedTask.fullData.publication_target
                     }) 
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.details?.message || data.error);
-                statusEl.textContent = 'Rascunho salvo com o método correto! 🎉';
+                statusEl.textContent = 'Rascunho salvo com sucesso! 🎉';
             } catch (err) {
                 statusEl.textContent = `Falha ao salvar: ${err.message} ❌`;
+            } finally {
+                submitBtn.disabled = false;
             }
         });
     </script>
