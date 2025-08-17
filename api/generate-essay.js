@@ -1,6 +1,5 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Pega a chave da API da variável de ambiente do Vercel (MÉTODO SEGURO)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 function stripHtml(html){
@@ -23,34 +22,41 @@ module.exports = async (req, res) => {
             return res.status(400).json({ error: 'Dados da proposta (promptData) são obrigatórios.' });
         }
         
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        
+        // --- ETAPA 1: GERAR O CORPO DA REDAÇÃO ---
         const coletaneaEEnunciado = stripHtml(promptData.taskContent);
         const focoNoGenero = stripHtml(promptData.supportText);
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-
-        const fullPrompt = `
+        const bodyPrompt = `
             Você é um especialista encarregado de criar uma redação modelo (gabarito) para um estudante do 7º ano do ensino fundamental no Brasil.
-            Analise a proposta completa, incluindo a coletânea e as instruções sobre o gênero textual.
-            Sua tarefa é gerar uma redação que siga TODAS as regras e se inspire nos textos de apoio.
-            **PROPOSTA COMPLETA (PRÉVIA):**
-            ---
-            ${coletaneaEEnunciado}
-            ---
-            **INSTRUÇÕES DO GÊNERO:**
-            ---
-            ${focoNoGenero}
-            ---
-            **REDAÇÃO MODELO (GABARITO):**
-            Com base em TUDO o que foi apresentado acima, escreva a redação.
-            - Siga estritamente todas as regras do enunciado.
-            - Mantenha a linguagem apropriada para um jovem de 12-13 anos, mas com excelente gramática e estrutura.
-            - O texto deve ser escrito em parágrafos claros, sem títulos como "Introdução".
+            Analise a proposta completa abaixo e gere uma redação que siga TODAS as regras.
+            PROPOSTA: """${coletaneaEEnunciado}"""
+            INSTRUÇÕES DO GÊNERO: """${focoNoGenero}"""
+            REDAÇÃO MODELO (GABARITO): Escreva a redação solicitada, mantendo a linguagem apropriada para um jovem de 12-13 anos, com excelente gramática e parágrafos claros. Não escreva nada além da redação em si.
         `;
         
-        const result = await model.generateContent(fullPrompt);
-        const essayText = result.response.text();
+        const bodyResult = await model.generateContent(bodyPrompt);
+        const essayBody = bodyResult.response.text();
 
-        res.status(200).json({ success: true, essay: essayText });
+        // --- ETAPA 2: GERAR O TÍTULO PARA A REDAÇÃO CRIADA ---
+        const titlePrompt = `
+            Com base na redação abaixo, crie um título criativo, curto e impactante de no máximo 10 palavras.
+            Responda APENAS com o título, sem aspas, sem "Título:" e sem nenhum outro texto.
+            REDAÇÃO: """${essayBody}"""
+        `;
+
+        const titleResult = await model.generateContent(titlePrompt);
+        let essayTitle = titleResult.response.text().trim();
+        // Remove aspas se a IA as incluir por engano
+        essayTitle = essayTitle.replace(/^"|"$/g, '');
+
+        // Retorna AMBOS, o corpo e o título gerado
+        res.status(200).json({ 
+            success: true, 
+            essayBody: essayBody, 
+            essayTitle: essayTitle 
+        });
 
     } catch (error) {
         console.error("--- ERRO FATAL EM /api/generate-essay ---", error);
