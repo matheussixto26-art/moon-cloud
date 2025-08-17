@@ -18,7 +18,6 @@
         #essayList li { background-color: #2c2c2c; padding: 10px 15px; margin-bottom: 5px; border-radius: 4px; cursor: pointer; border-left: 4px solid #bb86fc; transition: background-color 0.2s; }
         #essayList li.selected { background-color: #bb86fc; color: #121212; font-weight: bold; }
         #prompt-display { margin-top: 20px; padding: 15px; background-color: #2c2c2c; border-radius: 4px; border: 1px solid #444; max-height: 300px; overflow-y: auto; display: none; }
-        #prompt-display a { color: #8ab4f8; }
     </style>
 </head>
 <body>
@@ -50,7 +49,7 @@
     <script>
         let tokenB = null;
         let essays = [];
-        let selectedTask = { id: null, details: null };
+        let selectedTask = { id: null, details: null, fullData: null };
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -74,7 +73,8 @@
             const essayList = document.getElementById('essayList');
             const now = new Date();
             const availableEssays = essays.filter(t => 
-                t.is_essay === true && 
+                t.is_essay === true &&
+                t.answer_id !== null && // Apenas redações que já foram iniciadas (têm um rascunho)
                 t.answer_status !== 'pending' &&
                 new Date(t.publish_at) <= now && 
                 new Date(t.expire_at) > now
@@ -82,7 +82,7 @@
             
             essaySection.style.display = 'block';
             if (availableEssays.length === 0) {
-                essayList.innerHTML = '<li>Nenhuma redação válida (não expirada) encontrada.</li>';
+                essayList.innerHTML = '<li>Nenhuma redação válida e iniciada (com rascunho) encontrada.</li>';
                 return;
             }
             essayList.innerHTML = availableEssays.map(essay => `<li data-task-id="${essay.id}">${essay.title}</li>`).join('');
@@ -98,39 +98,26 @@
             const taskData = essays.find(t => t.id == taskId);
             if (!taskData) { alert('Erro: dados da tarefa não encontrados.'); return; }
 
-            const answerId = taskData.answer_id;
-            const publicationTarget = taskData.publication_target;
+            selectedTask.fullData = taskData; // Salva todos os dados da tarefa
 
-            selectedTask = { id: taskId, details: null };
-            document.getElementById('generateEssayButton').disabled = true;
-            document.getElementById('submitEssayButton').disabled = true;
             const statusEl = document.getElementById('submissionStatus');
-            const promptDisplay = document.getElementById('prompt-display');
-            
-            promptDisplay.style.display = 'none';
             statusEl.textContent = 'Buscando proposta completa... 📚';
 
             try {
                 const res = await fetch('/api/get-essay-details', { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ tokenB, taskId, answerId, publicationTarget }) 
+                    body: JSON.stringify({ tokenB, taskId, answerId: taskData.answer_id, publicationTarget: taskData.publication_target }) 
                 });
                 const details = await res.json();
                 if (!res.ok) throw new Error(details.error || 'Não foi possível carregar os detalhes.');
                 
-                selectedTask.details = details;
-                const taskContent = details.taskContent;
+                selectedTask.id = taskId;
+                selectedTask.details = details; 
                 
-                if (taskContent) {
-                    statusEl.textContent = 'Proposta carregada! Clique para gerar com a IA.';
-                    promptDisplay.style.display = 'block';
-                    promptDisplay.innerHTML = `<h3>Proposta e Coletânea:</h3>${taskContent}`;
-                    document.getElementById('generateEssayButton').disabled = false;
-                } else {
-                    statusEl.textContent = 'Erro: Proposta recebida, mas o formato é desconhecido.';
-                }
-
+                document.getElementById('prompt-display').innerHTML = `<h3>Proposta e Coletânea:</h3>${details.taskContent}`;
+                statusEl.textContent = 'Proposta carregada! Clique para gerar com a IA.';
+                document.getElementById('generateEssayButton').disabled = false;
             } catch (err) {
                 statusEl.textContent = `Falha ao buscar detalhes: ${err.message}`;
             }
@@ -139,9 +126,7 @@
         document.getElementById('generateEssayButton').addEventListener('click', async () => {
              if (!selectedTask.id || !selectedTask.details) return;
             const statusEl = document.getElementById('submissionStatus');
-            const genButton = document.getElementById('generateEssayButton');
             statusEl.textContent = 'IA escrevendo... 🤖⏳';
-            genButton.disabled = true;
             try {
                 const res = await fetch('/api/generate-essay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ promptData: selectedTask.details }) });
                 const data = await res.json();
@@ -151,25 +136,18 @@
                 document.getElementById('submitEssayButton').disabled = false;
             } catch (err) {
                 statusEl.textContent = `Erro da IA: ${err.message} ❌`;
-            } finally {
-                genButton.disabled = false;
             }
         });
 
         document.getElementById('submitEssayButton').addEventListener('click', async () => {
             const essayText = document.getElementById('essayText').value;
             const statusEl = document.getElementById('submissionStatus');
-            if (!selectedTask.id || !essayText.trim()) return;
+            if (!selectedTask.id || !essayText.trim() || !selectedTask.details?.questionId) {
+                statusEl.textContent = 'Erro: dados da tarefa ou da questão ausentes.';
+                return;
+            }
 
-            // ===== A CORREÇÃO FINAL ESTÁ AQUI =====
-            // Busca a tarefa selecionada para pegar o título original dela
-            const taskData = essays.find(t => t.id == selectedTask.id);
-            const essayTitle = taskData ? taskData.title : "Redação Gerada por IA"; // Pega o título ou usa um padrão
-            // =====================================
-
-            statusEl.textContent = 'Salvando rascunho... 🚀';
-            const submitBtn = document.getElementById('submitEssayButton');
-            submitBtn.disabled = true;
+            statusEl.textContent = 'Salvando rascunho (método final)... 🚀';
             try {
                 const res = await fetch('/api/submit-essay', { 
                     method: 'POST', 
@@ -177,17 +155,18 @@
                     body: JSON.stringify({ 
                         tokenB: tokenB, 
                         taskId: selectedTask.id, 
+                        answerId: selectedTask.fullData.answer_id,
+                        questionId: selectedTask.details.questionId,
                         essayText: essayText, 
-                        essayTitle: essayTitle // <-- AGORA ENVIA O TÍTULO CORRETO
+                        essayTitle: selectedTask.fullData.title,
+                        executedOn: selectedTask.fullData.publication_target
                     }) 
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.details?.message || data.error);
-                statusEl.textContent = 'Rascunho salvo com sucesso! 🎉';
+                statusEl.textContent = 'Rascunho salvo com o método correto! 🎉';
             } catch (err) {
                 statusEl.textContent = `Falha ao salvar: ${err.message} ❌`;
-            } finally {
-                submitBtn.disabled = false;
             }
         });
     </script>
